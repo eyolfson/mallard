@@ -14,6 +14,6 @@ subdir('src')
 
 executable(
   'mallard-asm',
-  assembler_sources,
+  asm_sources,
   include_directories : assembler_inc,
 )

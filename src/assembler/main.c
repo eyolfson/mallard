@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "ansi.h"
+#include "lexer.h"
 #include "version.h"
 
 int main(int argc, char** argv) {

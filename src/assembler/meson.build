@@ -11,8 +11,11 @@ configure_file(
 assembler_inc = include_directories('.')
  
 assembler_sources = files(
-  'main.c',
   'compile.c',
+  'lexer.c',
+  'token.c',
 )
+
+asm_sources = files('main.c') + assembler_sources
 
 subdir('tests')

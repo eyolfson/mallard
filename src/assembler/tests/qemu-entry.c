@@ -12,7 +12,7 @@ int main(void) {
       "sw a0, 0(a1)\n";
     struct str input = {
         .data = raw_input,
-        .size = sizeof(raw_input),
+        .size = sizeof(raw_input) - 1,
     };
     struct vector output = compile(&input);
     uint8_t expected_output[] = {
