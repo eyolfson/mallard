@@ -14,6 +14,7 @@ assembler_sources = files(
   'compile.c',
   'lexer.c',
   'token.c',
+  'tokens.c',
 )
 
 asm_sources = files('main.c') + assembler_sources

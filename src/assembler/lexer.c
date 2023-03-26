@@ -23,13 +23,14 @@ static bool is_alpha(uint8_t byte) {
     return false;
 }
 
-struct vector lex(struct str* input) {
-    uint64_t capacity = 4096;
-    uint8_t* data = malloc(capacity);
-    if (data == NULL) {
-        exit(1);
-    }
-    uint64_t size = 0;
+struct tokens lex(struct str* input) {
+    struct tokens tokens;
+    token_init(&tokens);
+
+    enum state {
+        START,
+        IDENTIFIER,
+    } state = START;
 
     for (uint64_t i = 0; i < input->size; ++i) {
         uint8_t byte = input->data[i];
@@ -38,13 +39,12 @@ struct vector lex(struct str* input) {
         }
 
         if (is_alpha(byte)) {
+            if (state == START) {
+                state = IDENTIFIER;
+                continue;
+            }
         }
     }
 
-    struct vector tokens = {
-        .capacity = capacity,
-        .data = data,
-        .size = size,
-    };
     return tokens;
 }

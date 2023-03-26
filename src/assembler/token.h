@@ -4,11 +4,11 @@
 #include "str.h"
 
 enum token_kind {
-    IDENTIFIER,
-    NUMBER,
-    COMMA,
-    LEFT_PAREN,
-    RIGHT_PAREN,
+    TOKEN_IDENTIFIER,
+    TOKEN_NUMBER,
+    TOKEN_COMMA,
+    TOKEN_LEFT_PAREN,
+    TOKEN_RIGHT_PAREN,
 };
 
 struct token {
