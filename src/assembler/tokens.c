@@ -24,11 +24,12 @@ static struct token* token_new(struct tokens* tokens) {
     return token_get(tokens, index);
 }
 
-struct token* token_get(struct tokens* tokens, uint32_t index) {
+struct token* token_get(struct tokens* tokens, uint64_t index) {
     if (index >= tokens->length) {
         exit(1);
     }
-    return &(((struct token*) tokens->vector.data)[index]);
+    struct token* base = (struct token*) ((void*) tokens->vector.data);
+    return &(base[index]);
 }
 
 void token_push(struct tokens* tokens,
@@ -64,5 +65,5 @@ void token_print(struct token* token) {
         break;
     }
     printf("token(kind: %s, data: '%.*s', size: %llu)\n",
-           kind, token->str.size, token->str.data, token->str.size);
+           kind, (int) token->str.size, token->str.data, token->str.size);
 }

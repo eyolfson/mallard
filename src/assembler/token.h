@@ -12,8 +12,8 @@ enum token_kind {
 };
 
 struct token {
-    enum token_kind kind;
     struct str str;
+    uint64_t kind;
 };
 
 #endif /* ifndef MALLARD_TOKEN_H */

@@ -60,7 +60,7 @@ struct tokens lex(struct str* input) {
                 continue;
             }
             state = START;
-            uint64_t token_length = current - token_start;
+            uint64_t token_length = (uint64_t) (current - token_start);
             token_push(&tokens, TOKEN_IDENTIFIER,
                         token_start, token_length);
         }
@@ -72,7 +72,7 @@ struct tokens lex(struct str* input) {
                 continue;
             }
             state = START;
-            uint64_t token_length = current - token_start;
+            uint64_t token_length = (uint64_t) (current - token_start);
             token_push(&tokens, TOKEN_NUMBER,
                         token_start, token_length);
             created_digit = true;
@@ -131,12 +131,12 @@ struct tokens lex(struct str* input) {
 
     uint8_t* end = input->data + input->size;
     if (state == IDENTIFIER) {
-        uint64_t token_length = end - token_start;
+        uint64_t token_length = (uint64_t) (end - token_start);
         token_push(&tokens, TOKEN_IDENTIFIER,
                    token_start, token_length);
     }
     else if (state == NUMBER) {
-        uint64_t token_length = end - token_start;
+        uint64_t token_length = (uint64_t) (end - token_start);
         token_push(&tokens, TOKEN_NUMBER,
                    token_start, token_length);
     }

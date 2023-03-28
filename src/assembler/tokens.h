@@ -10,7 +10,7 @@ struct tokens {
 };
 
 void token_init(struct tokens* tokens);
-struct token* token_get(struct tokens* tokens, uint32_t index);
+struct token* token_get(struct tokens* tokens, uint64_t index);
 void token_push(struct tokens* tokens,
                 enum token_kind token_kind,
                 uint8_t* token_start,

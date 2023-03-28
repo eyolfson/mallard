@@ -6,6 +6,7 @@ project(
     # Core options
     'warning_level=everything',
     # Compiler options
+    'c_args=-Wno-poison-system-directories',
     'c_std=c2x',
   ],
 )
