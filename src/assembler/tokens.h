@@ -6,7 +6,7 @@
 
 struct tokens {
     struct vector vector;
-    uint32_t length;
+    uint64_t length;
 };
 
 void token_init(struct tokens* tokens);
@@ -15,5 +15,6 @@ void token_push(struct tokens* tokens,
                 enum token_kind token_kind,
                 uint8_t* token_start,
                 uint64_t token_length);
+void token_print(struct token* token);
 
 #endif /* ifndef MALLARD_TOKENS_H */

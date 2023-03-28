@@ -1,5 +1,6 @@
 #include "tokens.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 void token_init(struct tokens* tokens) {
@@ -30,7 +31,6 @@ struct token* token_get(struct tokens* tokens, uint32_t index) {
     return &(((struct token*) tokens->vector.data)[index]);
 }
 
-#include <stdio.h>
 void token_push(struct tokens* tokens,
                 enum token_kind token_kind,
                 uint8_t* token_start,
@@ -39,4 +39,30 @@ void token_push(struct tokens* tokens,
     token->kind = token_kind;
     token->str.data = token_start;
     token->str.size = token_length;
+}
+
+void token_print(struct token* token) {
+    const char* kind = NULL;
+    switch(token->kind) {
+    case TOKEN_IDENTIFIER:
+        kind = "identifier";
+        break;
+    case TOKEN_NUMBER:
+        kind = "number";
+        break;
+    case TOKEN_COMMA:
+        kind = "comma";
+        break;
+    case TOKEN_LEFT_PAREN:
+        kind = "left_paren";
+        break;
+    case TOKEN_RIGHT_PAREN:
+        kind = "right_paren";
+        break;
+    default:
+        kind = "unknown";
+        break;
+    }
+    printf("token(kind: %s, data: '%.*s', size: %llu)\n",
+           kind, token->str.size, token->str.data, token->str.size);
 }
