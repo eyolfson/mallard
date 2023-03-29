@@ -13,6 +13,7 @@ assembler_inc = include_directories('.')
 assembler_sources = files(
   'compile.c',
   'lexer.c',
+  'parser.c',
   'token.c',
   'tokens.c',
 )

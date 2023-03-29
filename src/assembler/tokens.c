@@ -42,9 +42,9 @@ void token_push(struct tokens* tokens,
     token->str.size = token_length;
 }
 
-void token_print(struct token* token) {
+const char* token_kind_c_str(uint64_t token_kind) {
     const char* kind = NULL;
-    switch(token->kind) {
+    switch(token_kind) {
     case TOKEN_IDENTIFIER:
         kind = "identifier";
         break;
@@ -64,6 +64,12 @@ void token_print(struct token* token) {
         kind = "unknown";
         break;
     }
+    return kind;
+}
+
+void token_print(struct token* token) {
     printf("token(kind: %s, data: '%.*s', size: %llu)\n",
-           kind, (int) token->str.size, token->str.data, token->str.size);
+           token_kind_c_str(token->kind),
+           (int) token->str.size, token->str.data,
+           token->str.size);
 }

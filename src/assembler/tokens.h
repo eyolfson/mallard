@@ -15,6 +15,7 @@ void token_push(struct tokens* tokens,
                 enum token_kind token_kind,
                 uint8_t* token_start,
                 uint64_t token_length);
+const char* token_kind_c_str(uint64_t token_kind);
 void token_print(struct token* token);
 
 #endif /* ifndef MALLARD_TOKENS_H */

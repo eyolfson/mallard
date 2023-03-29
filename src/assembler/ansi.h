@@ -2,7 +2,9 @@
 #define MALLARD_ANSI_H
 
 #define ANSI_ESCAPE "\033"
+#define ANSI_BOLD_RED ANSI_ESCAPE "[1;31m"
 #define ANSI_BOLD_GREEN ANSI_ESCAPE "[1;32m"
+#define ANSI_RED ANSI_ESCAPE "[31m"
 #define ANSI_BOLD ANSI_ESCAPE "[1m"
 #define ANSI_RESET ANSI_ESCAPE "[0m"
 
