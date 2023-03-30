@@ -11,7 +11,9 @@ configure_file(
 assembler_inc = include_directories('.')
  
 assembler_sources = files(
+  'ast_node.c',
   'compile.c',
+  'instructions.c',
   'lexer.c',
   'parser.c',
   'token.c',

@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include "ansi.h"
+#include "ast_node.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -57,8 +58,24 @@ static struct token* expect(struct parser* parser, enum token_kind token_kind) {
     return token;
 }
 
+static struct utype_ast_node* lui_instruction(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* imm = expect(parser, TOKEN_NUMBER);
+
+    return create_utype_ast_node(mnemonic, rd, imm);
+}
+
 static void instruction(struct parser* parser) {
-    expect(parser, TOKEN_IDENTIFIER); /* Mnemonic */
+    struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
+    if (token_equals_c_str(mnemonic, "lui")) {
+        lui_instruction(parser, mnemonic);
+        return;
+    }
+
     expect(parser, TOKEN_IDENTIFIER); /* Register */
     expect(parser, TOKEN_COMMA);
     if (accept(parser, TOKEN_IDENTIFIER)) {
@@ -91,6 +108,12 @@ static void instruction(struct parser* parser) {
     }
 }
 
+static void instructions(struct parser* parser) {
+    while (accept(parser, TOKEN_IDENTIFIER)) {
+        instruction(parser);
+    }
+}
+
 void parse(struct tokens* tokens) {
     struct parser parser = {
         .tokens = tokens,
@@ -102,9 +125,7 @@ void parse(struct tokens* tokens) {
         token_print(token);
     }
 
-    while (accept(&parser, TOKEN_IDENTIFIER)) {
-        instruction(&parser);
-    }
+    instructions(&parser);
 
     if (parser.index != tokens->length) {
         struct token* token = token_get(tokens, parser.index);

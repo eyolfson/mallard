@@ -3,6 +3,8 @@
 
 #include "str.h"
 
+#include <stdbool.h>
+
 enum token_kind {
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
@@ -12,8 +14,10 @@ enum token_kind {
 };
 
 struct token {
-    struct str str;
     uint64_t kind;
+    struct str str;
 };
+
+bool token_equals_c_str(struct token* token, const char* c_str);
 
 #endif /* ifndef MALLARD_TOKEN_H */
