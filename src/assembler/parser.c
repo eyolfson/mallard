@@ -58,6 +58,19 @@ static struct token* expect(struct parser* parser, enum token_kind token_kind) {
     return token;
 }
 
+static struct itype_ast_node* addiw_instruction(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* rs1 = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* imm = expect(parser, TOKEN_NUMBER);
+
+    return create_itype_ast_node(mnemonic, rd, rs1, imm);
+}
+
 static struct utype_ast_node* lui_instruction(
     struct parser* parser,
     struct token* mnemonic
@@ -69,48 +82,48 @@ static struct utype_ast_node* lui_instruction(
     return create_utype_ast_node(mnemonic, rd, imm);
 }
 
-static void instruction(struct parser* parser) {
-    struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
-    if (token_equals_c_str(mnemonic, "lui")) {
-        lui_instruction(parser, mnemonic);
-        return;
-    }
-
-    expect(parser, TOKEN_IDENTIFIER); /* Register */
+static struct stype_ast_node* sw_instruction(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rs2 = expect(parser, TOKEN_IDENTIFIER);
     expect(parser, TOKEN_COMMA);
-    if (accept(parser, TOKEN_IDENTIFIER)) {
-        expect(parser, TOKEN_IDENTIFIER); /* Register */
+    struct token* imm = expect(parser, TOKEN_NUMBER);
+    expect(parser, TOKEN_LEFT_PAREN);
+    struct token* rs1 = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_RIGHT_PAREN);
+
+    return create_stype_ast_node(mnemonic, rs1, rs2, imm);
+}
+
+static void* instruction(struct parser* parser) {
+    struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
+    if(token_equals_c_str(mnemonic, "addiw")) {
+        return addiw_instruction(parser, mnemonic);
     }
-    else if (accept(parser, TOKEN_NUMBER)) {
-        expect(parser, TOKEN_NUMBER);
-        if (accept(parser, TOKEN_LEFT_PAREN)) {
-            next(parser);
-            expect(parser, TOKEN_IDENTIFIER);
-            expect(parser, TOKEN_RIGHT_PAREN);
-        }
+    else if (token_equals_c_str(mnemonic, "lui")) {
+        return lui_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "sw")) {
+        return sw_instruction(parser, mnemonic);
     }
     else {
-        syntax_error("expected identifier or number");
-    }
-
-    if (accept(parser, TOKEN_COMMA)) {
-        next(parser);
-
-        if (accept(parser, TOKEN_IDENTIFIER)) {
-            expect(parser, TOKEN_IDENTIFIER); /* Register */
-        }
-        else if (accept(parser, TOKEN_NUMBER)) {
-            expect(parser, TOKEN_NUMBER);
-        }
-        else {
-            syntax_error("expected identifier or number");
-        }
+        char buffer[4096];
+        snprintf(buffer, sizeof(buffer), "unknown instruction mnemonic '%.*s'",
+                 (int) mnemonic->str.size, mnemonic->str.data);
+        syntax_error(buffer);
     }
 }
 
 static void instructions(struct parser* parser) {
+    struct instructions_ast_node* instructions
+        = create_empty_instructions_ast_node();
+
     while (accept(parser, TOKEN_IDENTIFIER)) {
-        instruction(parser);
+        void* node = instruction(parser);
+        if (node != NULL) {
+            instructions_ast_node_push(instructions, node);
+        }
     }
 }
 

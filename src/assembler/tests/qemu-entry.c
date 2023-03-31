@@ -8,7 +8,7 @@ int main(void) {
     uint8_t raw_input[] =
       "lui a0, 0x5\n"
       "addiw a0, a0, 0x555\n"
-      "liu a1, 0x100\n"
+      "lui a1, 0x100\n"
       "sw a0, 0(a1)\n";
     struct str input = {
         .data = raw_input,
