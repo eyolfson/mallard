@@ -5,7 +5,7 @@
 
 struct instructions_ast_node {
     uint64_t kind;
-    void** data;
+    void** ast_nodes;
     uint64_t length;
 };
 
@@ -47,5 +47,6 @@ struct stype_ast_node* create_stype_ast_node(struct token* mnemonic,
 struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
                                              struct token* rd,
                                              struct token* imm);
+void ast_node_analyze(void* ast_node);
 
 #endif /* ifndef MALLARD_AST_NODE_H */

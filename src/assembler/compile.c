@@ -24,7 +24,9 @@ struct vector compile(struct str* str) {
     struct vector instructions = instructions_init();
 
     struct tokens tokens = lex(str);
-    parse(&tokens);
+    struct instructions_ast_node* insts = parse(&tokens);
+
+    ast_node_analyze(insts);
 
     return instructions;
 }

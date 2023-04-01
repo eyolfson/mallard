@@ -115,30 +115,26 @@ static void* instruction(struct parser* parser) {
     }
 }
 
-static void instructions(struct parser* parser) {
-    struct instructions_ast_node* instructions
+static struct instructions_ast_node* instructions(struct parser* parser) {
+    struct instructions_ast_node* insts
         = create_empty_instructions_ast_node();
 
     while (accept(parser, TOKEN_IDENTIFIER)) {
         void* node = instruction(parser);
         if (node != NULL) {
-            instructions_ast_node_push(instructions, node);
+            instructions_ast_node_push(insts, node);
         }
     }
+    return insts;
 }
 
-void parse(struct tokens* tokens) {
+struct instructions_ast_node* parse(struct tokens* tokens) {
     struct parser parser = {
         .tokens = tokens,
         .index = 0,
     };
 
-    for (uint64_t i = 0; i < tokens->length; ++i) {
-        struct token* token = token_get(tokens, i);
-        token_print(token);
-    }
-
-    instructions(&parser);
+    struct instructions_ast_node* insts = instructions(&parser);
 
     if (parser.index != tokens->length) {
         struct token* token = token_get(tokens, parser.index);
@@ -148,4 +144,6 @@ void parse(struct tokens* tokens) {
                  (int) token->str.size, token->str.data);
         syntax_error(buffer);
     }
+
+    return insts;
 }
