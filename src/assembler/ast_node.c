@@ -54,9 +54,9 @@ struct itype_ast_node* create_itype_ast_node(struct token* mnemonic,
     }
     node->kind = AST_NODE_ITYPE;
     node->mnemonic = mnemonic;
-    node->rd = rd;
-    node->rs1 = rs1;
-    node->imm = imm;
+    node->rd_token = rd;
+    node->rs1_token = rs1;
+    node->imm_token = imm;
     return node;
 }
 
@@ -70,9 +70,9 @@ struct stype_ast_node* create_stype_ast_node(struct token* mnemonic,
     }
     node->kind = AST_NODE_STYPE;
     node->mnemonic = mnemonic;
-    node->rs1 = rs1;
-    node->rs2 = rs2;
-    node->imm = imm;
+    node->rs1_token = rs1;
+    node->rs2_token = rs2;
+    node->imm_token = imm;
     return node;
 }
 
@@ -85,8 +85,8 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
     }
     node->kind = AST_NODE_UTYPE;
     node->mnemonic = mnemonic;
-    node->rd = rd;
-    node->imm = imm;
+    node->rd_token = rd;
+    node->imm_token = imm;
     return node;
 }
 
@@ -106,18 +106,63 @@ static uint8_t register_index(struct token* reg) {
     fatal_error("unknown register");
 }
 
+static uint32_t immediate(struct token* imm) {
+    uint8_t* data = imm->str.data;
+    if (imm->str.size == 1) {
+        uint8_t byte = data[0];
+        if (byte >= '0' && byte <= '9') {
+            return byte - '0';
+        }
+        fatal_error("unknown number");
+    }
+
+    if (imm->str.size < 2) {
+        fatal_error("immediate too small for hex");
+    }
+    else if (imm->str.size > 10) {
+        fatal_error("immediate too large for hex");
+    }
+    if (data[0] != '0' || data[1] != 'x') {
+        fatal_error("immediate hex must start with 0x");
+    }
+    uint32_t val = 0;
+    for (uint8_t i = 2; i < imm->str.size; ++i) {
+        val = val << 4;
+        uint8_t byte = data[i];
+        if (byte >= '0' && byte <= '9') {
+            val = val | (byte - '0');
+        }
+        else if (byte >= 'a' && byte <= 'f') {
+            val = val | (byte - 'a');
+        }
+        else {
+            fatal_error("not a valid hex");
+        }
+    }
+    return val;
+}
+
 static void analyze_itype(struct itype_ast_node* node) {
-    register_index(node->rd);
-    register_index(node->rs1);
+    register_index(node->rd_token);
+    register_index(node->rs1_token);
+    immediate(node->imm_token);
 }
 
 static void analyze_stype(struct stype_ast_node* node) {
-    register_index(node->rs1);
-    register_index(node->rs2);
+    register_index(node->rs1_token);
+    register_index(node->rs2_token);
+    immediate(node->imm_token);
 }
 
 static void analyze_utype(struct utype_ast_node* node) {
-    register_index(node->rd);
+    if (token_equals_c_str(node->mnemonic, "lui")) {
+        node->opcode = 0x37;
+    }
+    else {
+        fatal_error("unknown utype mnemonic");
+    }
+    register_index(node->rd_token);
+    immediate(node->imm_token);
 }
 
 void ast_node_analyze(void* ast_node) {

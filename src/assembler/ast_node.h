@@ -12,24 +12,28 @@ struct instructions_ast_node {
 struct itype_ast_node {
     uint64_t kind;
     struct token* mnemonic;
-    struct token* rd;
-    struct token* rs1;
-    struct token* imm;
+    struct token* rd_token;
+    struct token* rs1_token;
+    struct token* imm_token;
 };
 
 struct stype_ast_node {
     uint64_t kind;
     struct token* mnemonic;
-    struct token* rs1;
-    struct token* rs2;
-    struct token* imm;
+    struct token* rs1_token;
+    struct token* rs2_token;
+    struct token* imm_token;
 };
 
 struct utype_ast_node {
     uint64_t kind;
     struct token* mnemonic;
-    struct token* rd;
-    struct token* imm;
+    struct token* rd_token;
+    struct token* imm_token;
+
+    uint8_t opcode;
+    uint8_t rd;
+    uint32_t imm;
 };
 
 struct instructions_ast_node* create_empty_instructions_ast_node(void);
