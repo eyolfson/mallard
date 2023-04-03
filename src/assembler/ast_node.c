@@ -2,6 +2,7 @@
 
 #include "ansi.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -161,8 +162,8 @@ static void analyze_utype(struct utype_ast_node* node) {
     else {
         fatal_error("unknown utype mnemonic");
     }
-    register_index(node->rd_token);
-    immediate(node->imm_token);
+    node->rd = register_index(node->rd_token);
+    node->imm = immediate(node->imm_token);
 }
 
 void ast_node_analyze(void* ast_node) {
@@ -187,5 +188,31 @@ void ast_node_analyze(void* ast_node) {
         break;
     default:
         fatal_error("unknown ast node");
+    }
+}
+
+static uint32_t machine_code_utype(struct utype_ast_node* node) {
+    uint32_t val = 0;
+
+    assert(node->opcode < 0x80); // Ensure the opcode is 7 bits
+    assert((node->opcode & 0x3) == 0x3); // Ensure the lower two bits are 1
+    assert((node->opcode & 0x1C) != 0x1C); // Ensure bits 4, 3, 2 are not 111
+
+    assert(node->rd < 0x20); // Ensure rd is 5 bits
+
+    val |= node->opcode;
+    val |= node->rd << 7;
+    val |= node->imm << 12;
+
+    return val;
+}
+
+uint32_t ast_node_machine_code_u32(void* ast_node) {
+    uint64_t kind = *((uint64_t *) ast_node);
+    switch (kind) {
+    case AST_NODE_UTYPE:
+        return machine_code_utype((struct utype_ast_node*) ast_node);
+    default:
+        fatal_error("not an instruction ast node");
     }
 }

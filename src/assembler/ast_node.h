@@ -52,5 +52,6 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
                                              struct token* rd,
                                              struct token* imm);
 void ast_node_analyze(void* ast_node);
+uint32_t ast_node_machine_code_u32(void* ast_node);
 
 #endif /* ifndef MALLARD_AST_NODE_H */

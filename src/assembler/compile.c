@@ -20,6 +20,15 @@ static struct vector instructions_init() {
     return vector;
 }
 
+static void instructions_push_u32(struct vector* instructions, uint32_t val) {
+    if (instructions->capacity < (instructions->size + sizeof(val))) {
+        exit(1);
+    }
+    uint32_t* data = (uint32_t*) (instructions->data + instructions->size);
+    *data = val;
+    instructions->size += sizeof(val);
+}
+
 struct vector compile(struct str* str) {
     struct vector instructions = instructions_init();
 
@@ -27,6 +36,11 @@ struct vector compile(struct str* str) {
     struct instructions_ast_node* insts = parse(&tokens);
 
     ast_node_analyze(insts);
+
+    for (uint64_t i = 0; i < insts->length; ++i) {
+        instructions_push_u32(&instructions,
+                              ast_node_machine_code_u32(insts->ast_nodes[i]));
+    }
 
     return instructions;
 }
