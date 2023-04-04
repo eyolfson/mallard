@@ -2,7 +2,6 @@
 
 #include "ansi.h"
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -156,14 +155,32 @@ static void analyze_stype(struct stype_ast_node* node) {
 }
 
 static void analyze_utype(struct utype_ast_node* node) {
+    /* Opcode */
+    uint8_t opcode = 0;
     if (token_equals_c_str(node->mnemonic, "lui")) {
-        node->opcode = 0x37;
+        opcode = 0x37;
     }
     else {
         fatal_error("unknown utype mnemonic");
     }
+    if (opcode >= 0x80) {
+        fatal_error("utype instruction opcode is only 7 bits");
+    }
+    else if ((opcode & 0x3) != 0x3) {
+        fatal_error("utype instruction lower two bits must be 1");
+    }
+    else if ((opcode & 0x1C) == 0x1C) {
+        fatal_error("utype instruction bits 4, 3, 2 are 111");
+    }
+    node->opcode = opcode;
+
     node->rd = register_index(node->rd_token);
-    node->imm = immediate(node->imm_token);
+
+    uint32_t imm = immediate(node->imm_token);
+    if (imm >= 0x100000) {
+        fatal_error("utype instruction immediate must be 20 bits");
+    }
+    node->imm = imm;
 }
 
 void ast_node_analyze(void* ast_node) {
@@ -191,19 +208,71 @@ void ast_node_analyze(void* ast_node) {
     }
 }
 
-static uint32_t machine_code_utype(struct utype_ast_node* node) {
+static bool machine_code_utype_is_compressible(
+    struct utype_ast_node* node
+) {
+    if (node->imm >= 0x40) {
+        return false;
+    }
+
+    if (node->opcode == 0x37) {
+        if (node->rd == 0 || node->rd == 2) {
+            return false;
+        }
+    }
+
+    if (node->rd < 8) {
+        return false;
+    }
+    else if (node->rd > 15) {
+        return false;
+    }
+    return true;
+}
+
+bool ast_node_machine_code_is_compressible(void* ast_node) {
+    uint64_t kind = *((uint64_t *) ast_node);
+    switch (kind) {
+    case AST_NODE_UTYPE:
+        return machine_code_utype_is_compressible(
+            (struct utype_ast_node*) ast_node
+        );
+    default:
+        fatal_error("not an instruction ast node");
+    }
+}
+
+static uint16_t machine_code_utype_u16(struct utype_ast_node* node) {
+    if (node->opcode != 0x37) {
+        fatal_error("only one instruction supported currently");
+    }
+    uint8_t op = 0x1;
+    uint8_t funct = 0x3;
+
+    uint16_t val = 0;
+    val |= op;
+    val |= (node->imm & 0x1F) << 2;
+    val |= node->rd << 7;
+    val |= ((node->imm >> 5) & 0x1) << 12;
+    val |= funct << 13;
+    return val;
+}
+
+uint16_t ast_node_machine_code_u16(void* ast_node) {
+    uint64_t kind = *((uint64_t *) ast_node);
+    switch (kind) {
+    case AST_NODE_UTYPE:
+        return machine_code_utype_u16((struct utype_ast_node*) ast_node);
+    default:
+        fatal_error("not an instruction ast node");
+    }
+}
+
+static uint32_t machine_code_utype_u32(struct utype_ast_node* node) {
     uint32_t val = 0;
-
-    assert(node->opcode < 0x80); // Ensure the opcode is 7 bits
-    assert((node->opcode & 0x3) == 0x3); // Ensure the lower two bits are 1
-    assert((node->opcode & 0x1C) != 0x1C); // Ensure bits 4, 3, 2 are not 111
-
-    assert(node->rd < 0x20); // Ensure rd is 5 bits
-
     val |= node->opcode;
     val |= node->rd << 7;
     val |= node->imm << 12;
-
     return val;
 }
 
@@ -211,7 +280,7 @@ uint32_t ast_node_machine_code_u32(void* ast_node) {
     uint64_t kind = *((uint64_t *) ast_node);
     switch (kind) {
     case AST_NODE_UTYPE:
-        return machine_code_utype((struct utype_ast_node*) ast_node);
+        return machine_code_utype_u32((struct utype_ast_node*) ast_node);
     default:
         fatal_error("not an instruction ast node");
     }

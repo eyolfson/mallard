@@ -3,6 +3,8 @@
 
 #include "token.h"
 
+#include <stdbool.h>
+
 struct instructions_ast_node {
     uint64_t kind;
     void** ast_nodes;
@@ -52,6 +54,8 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
                                              struct token* rd,
                                              struct token* imm);
 void ast_node_analyze(void* ast_node);
+bool ast_node_machine_code_is_compressible(void* ast_node);
+uint16_t ast_node_machine_code_u16(void* ast_node);
 uint32_t ast_node_machine_code_u32(void* ast_node);
 
 #endif /* ifndef MALLARD_AST_NODE_H */

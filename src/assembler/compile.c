@@ -20,6 +20,15 @@ static struct vector instructions_init() {
     return vector;
 }
 
+static void instructions_push_u16(struct vector* instructions, uint16_t val) {
+    if (instructions->capacity < (instructions->size + sizeof(val))) {
+        exit(1);
+    }
+    uint16_t* data = (uint16_t*) (instructions->data + instructions->size);
+    *data = val;
+    instructions->size += sizeof(val);
+}
+
 static void instructions_push_u32(struct vector* instructions, uint32_t val) {
     if (instructions->capacity < (instructions->size + sizeof(val))) {
         exit(1);
@@ -38,8 +47,15 @@ struct vector compile(struct str* str) {
     ast_node_analyze(insts);
 
     for (uint64_t i = 0; i < insts->length; ++i) {
-        instructions_push_u32(&instructions,
-                              ast_node_machine_code_u32(insts->ast_nodes[i]));
+        void* ast_node = insts->ast_nodes[i];
+        if (ast_node_machine_code_is_compressible(ast_node)) {
+            instructions_push_u16(&instructions,
+                                  ast_node_machine_code_u16(ast_node));
+        }
+        else {
+            instructions_push_u32(&instructions,
+                                  ast_node_machine_code_u32(ast_node));
+        }
     }
 
     return instructions;
