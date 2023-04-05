@@ -17,6 +17,12 @@ struct itype_ast_node {
     struct token* rd_token;
     struct token* rs1_token;
     struct token* imm_token;
+
+    uint8_t opcode;
+    uint8_t rd;
+    uint8_t funct;
+    uint8_t rs1;
+    uint16_t imm;
 };
 
 struct stype_ast_node {
@@ -25,6 +31,12 @@ struct stype_ast_node {
     struct token* rs1_token;
     struct token* rs2_token;
     struct token* imm_token;
+
+    uint8_t opcode;
+    uint8_t funct;
+    uint8_t rs1;
+    uint8_t rs2;
+    uint16_t imm;
 };
 
 struct utype_ast_node {
