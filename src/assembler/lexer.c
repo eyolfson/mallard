@@ -1,9 +1,9 @@
 #include "lexer.h"
 
+#include "fatal_error.h"
 #include "token.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 static bool is_whitespace(uint8_t byte) {
@@ -81,8 +81,7 @@ struct tokens lex(struct str* input) {
         if (is_alpha(byte)) {
             if (state == START) {
                 if (created_digit) {
-                    dprintf(2, "parse failed\n");
-                    exit(1);
+                    fatal_error("parsed failed");
                 }
                 state = IDENTIFIER;
                 token_start = current;
@@ -125,8 +124,7 @@ struct tokens lex(struct str* input) {
             continue;
         }
 
-        dprintf(2, "parse failed\n");
-        exit(1);
+        fatal_error("parsed failed");
     }
 
     uint8_t* end = input->data + input->size;

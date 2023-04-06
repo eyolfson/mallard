@@ -13,7 +13,8 @@ assembler_inc = include_directories('.')
 assembler_sources = files(
   'ast_node.c',
   'compile.c',
-  'instructions.c',
+  'fatal_error.c',
+  'file.c',
   'lexer.c',
   'parser.c',
   'token.c',

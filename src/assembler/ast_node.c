@@ -1,9 +1,8 @@
 #include "ast_node.h"
 
-#include "ansi.h"
+#include "fatal_error.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 
 enum ast_node_kind {
     AST_NODE_INSTRUCTIONS,
@@ -11,14 +10,6 @@ enum ast_node_kind {
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
 };
-
-static void fatal_error(const char* message) __attribute__ ((noreturn));
-
-static void fatal_error(const char* message) {
-    dprintf(2, ANSI_BOLD_RED "fatal error:" ANSI_RESET " "
-               ANSI_RED "%s" ANSI_RESET "\n", message);
-    exit(1);
-}
 
 struct instructions_ast_node* create_empty_instructions_ast_node(void) {
     struct instructions_ast_node* node
