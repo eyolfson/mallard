@@ -2,6 +2,7 @@
 
 #include "ansi.h"
 #include "ast_node.h"
+#include "token.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -98,7 +99,7 @@ static struct stype_ast_node* sw_instruction(
 
 static void* instruction(struct parser* parser) {
     struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
-    if(token_equals_c_str(mnemonic, "addiw")) {
+    if (token_equals_c_str(mnemonic, "addiw")) {
         return addiw_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "lui")) {
@@ -128,7 +129,20 @@ static struct instructions_ast_node* instructions(struct parser* parser) {
     return insts;
 }
 
-struct instructions_ast_node* parse(struct tokens* tokens) {
+static void unit(struct parser* parser) {
+    struct token* keyword = expect(parser, TOKEN_IDENTIFIER);
+    if (token_equals_c_str(keyword, "func")) {
+        return;
+    }
+    else {
+        char buffer[4096];
+        snprintf(buffer, sizeof(buffer), "unknown keyword '%.*s'",
+                 (int) keyword->str.size, keyword->str.data);
+        syntax_error(buffer);
+    }
+}
+
+struct instructions_ast_node* parse_instructions(struct tokens* tokens) {
     struct parser parser = {
         .tokens = tokens,
         .index = 0,
@@ -146,4 +160,22 @@ struct instructions_ast_node* parse(struct tokens* tokens) {
     }
 
     return insts;
+}
+
+void parse(struct tokens* tokens) {
+    struct parser parser = {
+        .tokens = tokens,
+        .index = 0,
+    };
+
+    unit(&parser);
+
+    if (parser.index != tokens->length) {
+        struct token* token = token_get(tokens, parser.index);
+        char buffer[4096];
+        snprintf(buffer, sizeof(buffer), "expected end of input, got %s '%.*s'",
+                 token_kind_c_str(token->kind),
+                 (int) token->str.size, token->str.data);
+        syntax_error(buffer);
+    }
 }

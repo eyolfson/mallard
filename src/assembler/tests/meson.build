@@ -1,5 +1,5 @@
 compile_tests = [
-    'qemu-entry',
+    'qemu-exit-success',
 ]
 
 foreach test : compile_tests

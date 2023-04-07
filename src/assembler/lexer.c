@@ -81,7 +81,7 @@ struct tokens lex(struct str* input) {
         if (is_alpha(byte)) {
             if (state == START) {
                 if (created_digit) {
-                    fatal_error("parsed failed");
+                    fatal_error("lexer failed");
                 }
                 state = IDENTIFIER;
                 token_start = current;
@@ -105,6 +105,11 @@ struct tokens lex(struct str* input) {
             }
         }
 
+        if (byte == '=') {
+            token_push(&tokens, TOKEN_EQUAL_SIGN, current, 1);
+            continue;
+        }
+
         if (byte == ',') {
             token_push(&tokens, TOKEN_COMMA, current, 1);
             continue;
@@ -120,11 +125,31 @@ struct tokens lex(struct str* input) {
             continue;
         }
 
+        if (byte == '{') {
+            token_push(&tokens, TOKEN_LEFT_CURLY_BRACKET, current, 1);
+            continue;
+        }
+
+        if (byte == '}') {
+            token_push(&tokens, TOKEN_RIGHT_CURLY_BRACKET, current, 1);
+            continue;
+        }
+
+        if (byte == '[') {
+            token_push(&tokens, TOKEN_LEFT_SQUARE_BRACKET, current, 1);
+            continue;
+        }
+
+        if (byte == ']') {
+            token_push(&tokens, TOKEN_RIGHT_SQUARE_BRACKET, current, 1);
+            continue;
+        }
+
         if (is_whitespace(byte)) {
             continue;
         }
 
-        fatal_error("parsed failed");
+        fatal_error("lexer failed (unknown token)");
     }
 
     uint8_t* end = input->data + input->size;

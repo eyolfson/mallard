@@ -38,11 +38,11 @@ static void instructions_push_u32(struct vector* instructions, uint32_t val) {
     instructions->size += sizeof(val);
 }
 
-struct vector compile(struct str* str) {
+struct vector compile_instructions(struct str* str) {
     struct vector instructions = instructions_init();
 
     struct tokens tokens = lex(str);
-    struct instructions_ast_node* insts = parse(&tokens);
+    struct instructions_ast_node* insts = parse_instructions(&tokens);
 
     ast_node_analyze(insts);
 
@@ -59,4 +59,9 @@ struct vector compile(struct str* str) {
     }
 
     return instructions;
+}
+
+void compile(struct str* str) {
+    struct tokens tokens = lex(str);
+    parse(&tokens);
 }

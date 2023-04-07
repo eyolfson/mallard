@@ -14,7 +14,7 @@ int main(void) {
         .data = raw_input,
         .size = sizeof(raw_input) - 1,
     };
-    struct vector output = compile(&input);
+    struct vector output = compile_instructions(&input);
     uint8_t expected_output[] = {
         0x15, 0x65,
         0x1B, 0x05, 0x55, 0x55,

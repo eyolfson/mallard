@@ -29,8 +29,7 @@ int main(int argc, char** argv) {
     }
 
     struct str str = file_open(path);
-    struct vector output = compile(&str);
-    printf("Compiled %llu bytes\n", output.size);
+    compile(&str);
     file_close(&str);
 
     return 0;
