@@ -1,5 +1,6 @@
 #include "tokens.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -68,7 +69,7 @@ const char* token_kind_c_str(uint64_t token_kind) {
 }
 
 void token_print(struct token* token) {
-    printf("token(kind: %s, data: '%.*s', size: %llu)\n",
+    printf("token(kind: %s, data: '%.*s', size: %" PRIu64 ")\n",
            token_kind_c_str(token->kind),
            (int) token->str.size, token->str.data,
            token->str.size);

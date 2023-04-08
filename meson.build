@@ -7,7 +7,7 @@ project(
     'warning_level=3',
     # Compiler options
     'c_args=-Wno-poison-system-directories',
-    'c_std=c2x',
+    'c_std=gnu2x',
   ],
 )
 
