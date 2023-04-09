@@ -15,6 +15,7 @@ subdir('src')
 
 executable(
   'mallard-asm',
-  asm_sources,
+  'src/assembler/main.c',
   include_directories : assembler_inc,
+  link_with : assembler_lib,
 )

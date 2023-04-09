@@ -10,7 +10,8 @@ configure_file(
 )
 assembler_inc = include_directories('.')
  
-assembler_sources = files(
+assembler_lib = static_library(
+  'assembler',
   'ast_node.c',
   'compile.c',
   'fatal_error.c',
@@ -20,7 +21,5 @@ assembler_sources = files(
   'token.c',
   'tokens.c',
 )
-
-asm_sources = files('main.c') + assembler_sources
 
 subdir('tests')
