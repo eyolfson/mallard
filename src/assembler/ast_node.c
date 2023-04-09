@@ -5,11 +5,25 @@
 #include <stdlib.h>
 
 enum ast_node_kind {
+    AST_NODE_FUNCTION,
     AST_NODE_INSTRUCTIONS,
     AST_NODE_ITYPE,
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
 };
+
+struct function_ast_node* create_empty_function_ast_node(void) {
+    struct function_ast_node* node
+        = malloc(sizeof(struct function_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_FUNCTION;
+    node->name = NULL;
+    node->address_token = NULL;
+    node->insts = NULL;
+    return node;
+}
 
 struct instructions_ast_node* create_empty_instructions_ast_node(void) {
     struct instructions_ast_node* node

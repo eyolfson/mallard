@@ -63,5 +63,5 @@ struct vector compile_instructions(struct str* str) {
 
 void compile(struct str* str) {
     struct tokens tokens = lex(str);
-    parse(&tokens);
+    struct function_ast_node* func = parse(&tokens);
 }

@@ -5,6 +5,13 @@
 
 #include <stdbool.h>
 
+struct function_ast_node {
+    uint64_t kind;
+    struct token* name;
+    struct token* address_token;
+    struct instructions_ast_node* insts;
+};
+
 struct instructions_ast_node {
     uint64_t kind;
     void** ast_nodes;
@@ -50,6 +57,7 @@ struct utype_ast_node {
     uint32_t imm;
 };
 
+struct function_ast_node* create_empty_function_ast_node(void);
 struct instructions_ast_node* create_empty_instructions_ast_node(void);
 void instructions_ast_node_push(struct instructions_ast_node* instructions,
                                 void* node);

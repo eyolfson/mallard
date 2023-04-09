@@ -129,10 +129,43 @@ static struct instructions_ast_node* instructions(struct parser* parser) {
     return insts;
 }
 
-static void unit(struct parser* parser) {
+static struct function_ast_node* function(struct parser* parser) {
+    struct token* name = expect(parser, TOKEN_IDENTIFIER);
+
+    struct token* address = NULL;
+    if (accept(parser, TOKEN_LEFT_SQUARE_BRACKET)) {
+        next(parser);
+
+        struct token* option = expect(parser, TOKEN_IDENTIFIER);
+        if (!token_equals_c_str(option, "addr")) {
+            char buffer[4096];
+            snprintf(buffer, sizeof(buffer), "undefined option '%.*s'",
+                    (int) option->str.size, option->str.data);
+            syntax_error(buffer);
+        }
+
+        expect(parser, TOKEN_EQUAL_SIGN);
+        address = expect(parser, TOKEN_NUMBER);
+        expect(parser, TOKEN_RIGHT_SQUARE_BRACKET);
+    }
+
+    expect(parser, TOKEN_LEFT_CURLY_BRACKET);
+
+    struct instructions_ast_node* insts = instructions(parser);
+
+    expect(parser, TOKEN_RIGHT_CURLY_BRACKET);
+
+    struct function_ast_node* func = create_empty_function_ast_node();
+    func->name = name;
+    func->address_token = address;
+    func->insts = insts;
+    return func;
+}
+
+static struct function_ast_node* unit(struct parser* parser) {
     struct token* keyword = expect(parser, TOKEN_IDENTIFIER);
     if (token_equals_c_str(keyword, "func")) {
-        return;
+        return function(parser);
     }
     else {
         char buffer[4096];
@@ -162,13 +195,13 @@ struct instructions_ast_node* parse_instructions(struct tokens* tokens) {
     return insts;
 }
 
-void parse(struct tokens* tokens) {
+struct function_ast_node* parse(struct tokens* tokens) {
     struct parser parser = {
         .tokens = tokens,
         .index = 0,
     };
 
-    unit(&parser);
+    struct function_ast_node* func = unit(&parser);
 
     if (parser.index != tokens->length) {
         struct token* token = token_get(tokens, parser.index);
@@ -178,4 +211,6 @@ void parse(struct tokens* tokens) {
                  (int) token->str.size, token->str.data);
         syntax_error(buffer);
     }
+
+    return func;
 }
