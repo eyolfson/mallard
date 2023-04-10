@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "ansi.h"
 #include "compile.h"
+#include "fatal_error.h"
 #include "file.h"
 #include "lexer.h"
 #include "version.h"
@@ -13,22 +13,47 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const char* path = NULL;
+    const char* input = NULL;
+    const char* output = NULL;
+    const char* version = NULL;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--version") == 0) {
-            printf(ANSI_BOLD_GREEN "Mallard" ANSI_RESET " "
-                   ANSI_BOLD MALLARD_VERSION ANSI_RESET "\n");
-            exit(0);
+            version = argv[i];
+            continue;
         }
-        if (!path) {
-            path = argv[i];
+        else if (strcmp(argv[i], "-o") == 0) {
+            ++i;
+            if (i >= argc) {
+                fatal_error("required 'output' after '-o");
+            }
+            output = argv[i];
+            continue;
+        }
+
+        if (!input) {
+            input = argv[i];
         }
         else {
-            return 1;
+            fatal_error("only one input file supported");
         }
     }
 
-    struct str str = file_open(path);
+    if (version != NULL) {
+        if (input != NULL || output != NULL) {
+            fatal_error("'--version' should be the only argument");
+            return 1;
+        }
+        printf(ANSI_BOLD_GREEN "Mallard" ANSI_RESET " "
+                ANSI_BOLD MALLARD_VERSION ANSI_RESET "\n");
+        return 0;
+    }
+    else {
+        if (input == NULL || output == NULL) {
+            fatal_error("require both input and output files");
+        }
+    }
+
+    struct str str = file_open(input);
     compile(&str);
     file_close(&str);
 
