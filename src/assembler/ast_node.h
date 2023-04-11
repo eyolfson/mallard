@@ -10,6 +10,7 @@ struct function_ast_node {
     struct token* name;
     struct token* address_token;
     struct instructions_ast_node* insts;
+    uint32_t addresss;
 };
 
 struct instructions_ast_node {

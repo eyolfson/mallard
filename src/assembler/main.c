@@ -53,9 +53,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    struct str str = file_open(input);
-    compile(&str);
-    file_close(&str);
+    struct str str = file_open_read_mmap(input);
+    compile(&str, output);
+    file_close_mmap(&str);
 
     return 0;
 }

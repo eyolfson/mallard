@@ -113,7 +113,7 @@ static uint8_t register_index(struct token* reg) {
     fatal_error("unknown register");
 }
 
-static uint32_t immediate(struct token* imm) {
+static uint32_t immediate_u32(struct token* imm) {
     uint8_t* data = imm->str.data;
     if (imm->str.size == 1) {
         uint8_t byte = data[0];
@@ -166,7 +166,7 @@ static void analyze_itype(struct itype_ast_node* node) {
     node->rd = register_index(node->rd_token);
     node->rs1 = register_index(node->rs1_token);
 
-    uint32_t imm = immediate(node->imm_token);
+    uint32_t imm = immediate_u32(node->imm_token);
     if (imm >= 0x1000) {
         fatal_error("itype instruction immediate must be 12 bits");
     }
@@ -190,7 +190,7 @@ static void analyze_stype(struct stype_ast_node* node) {
     node->rs1 = register_index(node->rs1_token);
     node->rs2 = register_index(node->rs2_token);
 
-    uint32_t imm = immediate(node->imm_token);
+    uint32_t imm = immediate_u32(node->imm_token);
     if (imm >= 0x1000) {
         fatal_error("itype instruction immediate must be 12 bits");
     }
@@ -219,16 +219,27 @@ static void analyze_utype(struct utype_ast_node* node) {
 
     node->rd = register_index(node->rd_token);
 
-    uint32_t imm = immediate(node->imm_token);
+    uint32_t imm = immediate_u32(node->imm_token);
     if (imm >= 0x100000) {
         fatal_error("utype instruction immediate must be 20 bits");
     }
     node->imm = imm;
 }
 
+static void analyze_func(struct function_ast_node* node) {
+    uint32_t address = immediate_u32(node->address_token);
+    node->addresss = address;
+}
+
 void ast_node_analyze(void* ast_node) {
     uint64_t kind = *((uint64_t *) ast_node);
     switch (kind) {
+    case AST_NODE_FUNCTION: {
+        struct function_ast_node* func = (struct function_ast_node*) ast_node;
+        analyze_func(func);
+        ast_node_analyze(func->insts);
+        break;
+    }
     case AST_NODE_INSTRUCTIONS: {
         struct instructions_ast_node* insts
             = (struct instructions_ast_node*) ast_node;

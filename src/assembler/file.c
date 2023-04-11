@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct str file_open(const char* path) {
+struct str file_open_read_mmap(const char* path) {
     struct str str = {
         .data = NULL,
         .size = 0,
@@ -37,8 +37,23 @@ struct str file_open(const char* path) {
     return str;
 }
 
-void file_close(struct str* str) {
+void file_close_mmap(struct str* str) {
     if (munmap(str->data, str->size) == -1) {
         fatal_error("file munmap failed");
+    }
+}
+
+int file_open_write(const char* path) {
+    int fd = open(path, O_CREAT | O_WRONLY, 0755);
+    if (fd == -1) {
+        fatal_error("file open filed");
+    }
+    ftruncate(fd, 0);
+    return fd;
+}
+
+void file_close(int fd) {
+    if (close(fd) == -1) {
+        fatal_error("file close failed");
     }
 }
