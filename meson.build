@@ -8,6 +8,9 @@ project(
     # Compiler options
     'c_std=gnu2x',
   ],
+  license : 'Apache-2.0',
+  license_files : 'LICENSE',
+  meson_version : '>=1.1.0',
 )
 
 subdir('src')
