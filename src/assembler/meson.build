@@ -14,6 +14,7 @@ assembler_lib = static_library(
   'assembler',
   'ast_node.c',
   'compile.c',
+  'elf.c',
   'fatal_error.c',
   'file.c',
   'lexer.c',

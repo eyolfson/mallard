@@ -1,6 +1,7 @@
 #include "compile.h"
 
 #include "ast_node.h"
+#include "elf.h"
 #include "fatal_error.h"
 #include "file.h"
 #include "lexer.h"
@@ -71,13 +72,8 @@ void compile(struct str* str, const char* output) {
     ast_node_analyze(func);
     struct vector instructions = instructions_create(func->insts);
 
-    int fd = file_open_write(output);
-    ssize_t bytes_written = write(fd, instructions.data, instructions.size);
-    if (bytes_written < 0) {
-        fatal_error("write failed");
-    }
-    if (((uint64_t) bytes_written) != instructions.size) {
-        fatal_error("write failed (partial write)");
-    }
-    file_close(fd);
+    struct elf_file* elf_file = elf_create_empty();
+    elf_add_function(elf_file, func->name, func->addresss, &instructions);
+    elf_set_entry(elf_file, func->addresss);
+    elf_write(elf_file, output);
 }
