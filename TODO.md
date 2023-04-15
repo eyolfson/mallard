@@ -33,7 +33,7 @@ When QEMU jumps into the kernel, the register values are as follows:
 ### Flattened Device Tree
 
 The address of the FDT depends on how much memory QEMU gives the virtual
-machine. It may start at address `0x87e00000`. One of the next steps is to read
+machine. It may start at address `0x87E00000`. One of the next steps is to read
 the specification. It seems that the flattened tree uses `u32` fields and big
 endian byte order. An example of some values are:
 
