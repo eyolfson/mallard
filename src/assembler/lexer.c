@@ -35,6 +35,9 @@ static bool is_hex(uint8_t byte) {
     if (byte >= 'a' && byte <= 'f') {
         return true;
     }
+    else if (byte >= 'A' && byte <= 'F') {
+        return true;
+    }
     return is_digit(byte);
 }
 

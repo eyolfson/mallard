@@ -83,7 +83,7 @@ static struct utype_ast_node* lui_instruction(
     return create_utype_ast_node(mnemonic, rd, imm);
 }
 
-static struct stype_ast_node* sw_instruction(
+static struct stype_ast_node* stype_instruction(
     struct parser* parser,
     struct token* mnemonic
 ) {
@@ -105,8 +105,14 @@ static void* instruction(struct parser* parser) {
     else if (token_equals_c_str(mnemonic, "lui")) {
         return lui_instruction(parser, mnemonic);
     }
+    else if (token_equals_c_str(mnemonic, "sb")) {
+        return stype_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "sh")) {
+        return stype_instruction(parser, mnemonic);
+    }
     else if (token_equals_c_str(mnemonic, "sw")) {
-        return sw_instruction(parser, mnemonic);
+        return stype_instruction(parser, mnemonic);
     }
     else {
         char buffer[4096];

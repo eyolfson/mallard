@@ -110,9 +110,13 @@ static uint8_t register_index(struct token* reg) {
             return 11;
         }
     }
+    else if(data[0] == 'x') {
+        /* TODO: only x0 - x9 */
+        return data[1] - '0';
+    }
     fatal_error("unknown register");
 }
-
+#include <stdio.h>
 static uint32_t immediate_u32(struct token* imm) {
     uint8_t* data = imm->str.data;
     if (imm->str.size == 1) {
@@ -140,12 +144,16 @@ static uint32_t immediate_u32(struct token* imm) {
             val = val | (byte - '0');
         }
         else if (byte >= 'a' && byte <= 'f') {
-            val = val | (byte - 'a');
+            val = val | ((byte - 'a') + 10);
+        }
+        else if (byte >= 'A' && byte <= 'F') {
+            val = val | ((byte - 'A') + 10);
         }
         else {
             fatal_error("not a valid hex");
         }
     }
+    printf("Got %x\n", val);
     return val;
 }
 
@@ -177,12 +185,20 @@ static void analyze_stype(struct stype_ast_node* node) {
     /* Opcode */
     uint8_t opcode = 0;
     uint8_t funct = 0;
-    if (token_equals_c_str(node->mnemonic, "sw")) {
+    if (token_equals_c_str(node->mnemonic, "sb")) {
+        opcode = 0x23;
+        funct = 0x0;
+    }
+    else if (token_equals_c_str(node->mnemonic, "sh")) {
+        opcode = 0x23;
+        funct = 0x1;
+    }
+    else if (token_equals_c_str(node->mnemonic, "sw")) {
         opcode = 0x23;
         funct = 0x2;
     }
     else {
-        fatal_error("unknown itype mnemonic");
+        fatal_error("unknown stype mnemonic");
     }
     node->opcode = opcode;
     node->funct = funct;
@@ -192,7 +208,7 @@ static void analyze_stype(struct stype_ast_node* node) {
 
     uint32_t imm = immediate_u32(node->imm_token);
     if (imm >= 0x1000) {
-        fatal_error("itype instruction immediate must be 12 bits");
+        fatal_error("stype instruction immediate must be 12 bits");
     }
     node->imm = imm;
 }
@@ -266,6 +282,9 @@ static bool machine_code_stype_is_compressible(
     struct stype_ast_node* node
 ) {
     if (node->opcode != 0x23) {
+        return false;
+    }
+    else if (node->funct != 0x2) {
         return false;
     }
 
