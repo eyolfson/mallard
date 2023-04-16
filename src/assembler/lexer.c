@@ -56,7 +56,7 @@ struct tokens lex(struct str* input) {
 
         bool created_digit = false;
         if (state == IDENTIFIER) {
-            if (is_alpha(byte) || is_digit(byte)) {
+            if (is_alpha(byte) || is_digit(byte) || byte == '_') {
                 continue;
             }
             state = START;
