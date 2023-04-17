@@ -116,7 +116,7 @@ static uint8_t register_index(struct token* reg) {
     }
     fatal_error("unknown register");
 }
-#include <stdio.h>
+
 static uint32_t immediate_u32(struct token* imm) {
     uint8_t* data = imm->str.data;
     if (imm->str.size == 1) {
@@ -153,7 +153,6 @@ static uint32_t immediate_u32(struct token* imm) {
             fatal_error("not a valid hex");
         }
     }
-    printf("Got %x\n", val);
     return val;
 }
 
