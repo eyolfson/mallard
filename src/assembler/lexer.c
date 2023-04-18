@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static bool is_whitespace(uint8_t byte) {
     switch (byte) {
@@ -113,8 +114,23 @@ struct tokens lex(struct str* input) {
             continue;
         }
 
+        if (byte == ':') {
+            token_push(&tokens, TOKEN_COLON, current, 1);
+            continue;
+        }
+
         if (byte == ',') {
             token_push(&tokens, TOKEN_COMMA, current, 1);
+            continue;
+        }
+
+        if (byte == '-') {
+            token_push(&tokens, TOKEN_DASH, current, 1);
+            continue;
+        }
+
+        if (byte == '.') {
+            token_push(&tokens, TOKEN_DOT, current, 1);
             continue;
         }
 
@@ -152,7 +168,9 @@ struct tokens lex(struct str* input) {
             continue;
         }
 
-        fatal_error("lexer failed (unknown token)");
+        char buffer[4096];
+        snprintf(buffer, sizeof(buffer), "lexer: unknown token '%c'", byte);
+        fatal_error(buffer);
     }
 
     uint8_t* end = input->data + input->size;
