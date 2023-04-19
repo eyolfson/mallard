@@ -5,6 +5,14 @@
 
 #include <stdbool.h>
 
+struct ast_node {
+    uint64_t kind;
+};
+
+struct executable_ast_node {
+    uint64_t kind;
+};
+
 struct function_ast_node {
     uint64_t kind;
     struct token* name;
@@ -58,6 +66,9 @@ struct utype_ast_node {
     uint32_t imm;
 };
 
+bool is_executable_ast_node(struct ast_node* node);
+bool is_function_ast_node(struct ast_node* node);
+struct executable_ast_node* create_empty_executable_ast_node(void);
 struct function_ast_node* create_empty_function_ast_node(void);
 struct instructions_ast_node* create_empty_instructions_ast_node(void);
 void instructions_ast_node_push(struct instructions_ast_node* instructions,

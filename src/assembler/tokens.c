@@ -1,4 +1,5 @@
 #include "tokens.h"
+#include "token.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -51,6 +52,9 @@ const char* token_kind_c_str(uint64_t token_kind) {
         break;
     case TOKEN_NUMBER:
         kind = "number";
+        break;
+    case TOKEN_STRING_LITERAL:
+        kind = "string_literal";
         break;
     case TOKEN_COMMA:
         kind = "comma";

@@ -2,6 +2,7 @@
 
 #include "ansi.h"
 #include "ast_node.h"
+#include "fatal_error.h"
 #include "token.h"
 
 #include <stdlib.h>
@@ -135,6 +136,47 @@ static struct instructions_ast_node* instructions(struct parser* parser) {
     return insts;
 }
 
+static struct executable_ast_node* executable(struct parser* parser) {
+    struct executable_ast_node* node = create_empty_executable_ast_node();
+
+    struct token* output_path = expect(parser, TOKEN_STRING_LITERAL);
+    expect(parser, TOKEN_LEFT_CURLY_BRACKET);
+
+    while(accept(parser, TOKEN_IDENTIFIER)) {
+        struct token* field = expect(parser, TOKEN_IDENTIFIER);
+        
+        if (token_equals_c_str(field, "address")) {
+            expect(parser, TOKEN_LEFT_PAREN);
+            expect(parser, TOKEN_IDENTIFIER);
+            expect(parser, TOKEN_RIGHT_PAREN);
+            expect(parser, TOKEN_COLON);
+            expect(parser, TOKEN_NUMBER);
+        }
+        else if (token_equals_c_str(field, "entry")) {
+            expect(parser, TOKEN_COLON);
+            expect(parser, TOKEN_IDENTIFIER);
+        }
+        else if (token_equals_c_str(field, "code")) {
+            expect(parser, TOKEN_COLON);
+            expect(parser, TOKEN_NUMBER);
+        }
+        else if (token_equals_c_str(field, "files")) {
+            expect(parser, TOKEN_COLON);
+            expect(parser, TOKEN_LEFT_SQUARE_BRACKET);
+            expect(parser, TOKEN_STRING_LITERAL);
+            expect(parser, TOKEN_RIGHT_SQUARE_BRACKET);
+        }
+
+        if (accept(parser, TOKEN_COMMA)) {
+            expect(parser, TOKEN_COMMA);
+        }
+    }
+
+    expect(parser, TOKEN_RIGHT_CURLY_BRACKET);
+
+    return node;
+}
+
 static struct function_ast_node* function(struct parser* parser) {
     struct token* name = expect(parser, TOKEN_IDENTIFIER);
 
@@ -168,10 +210,13 @@ static struct function_ast_node* function(struct parser* parser) {
     return func;
 }
 
-static struct function_ast_node* unit(struct parser* parser) {
+static struct ast_node* unit(struct parser* parser) {
     struct token* keyword = expect(parser, TOKEN_IDENTIFIER);
-    if (token_equals_c_str(keyword, "func")) {
-        return function(parser);
+    if (token_equals_c_str(keyword, "executable")) {
+        return (struct ast_node*) executable(parser);
+    }
+    else if (token_equals_c_str(keyword, "func")) {
+        return (struct ast_node*) function(parser);
     }
     else {
         char buffer[4096];
@@ -201,13 +246,13 @@ struct instructions_ast_node* parse_instructions(struct tokens* tokens) {
     return insts;
 }
 
-struct function_ast_node* parse(struct tokens* tokens) {
+struct ast_node* parse(struct tokens* tokens) {
     struct parser parser = {
         .tokens = tokens,
         .index = 0,
     };
 
-    struct function_ast_node* func = unit(&parser);
+    struct ast_node* node = unit(&parser);
 
     if (parser.index != tokens->length) {
         struct token* token = token_get(tokens, parser.index);
@@ -218,5 +263,5 @@ struct function_ast_node* parse(struct tokens* tokens) {
         syntax_error(buffer);
     }
 
-    return func;
+    return node;
 }

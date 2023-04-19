@@ -51,6 +51,7 @@ struct tokens lex(struct str* input) {
         IDENTIFIER,
         NUMBER,
         NUMBER_HEX,
+        STRING_LITERAL,
     } state = START;
     uint8_t* token_start = NULL;
 
@@ -81,6 +82,16 @@ struct tokens lex(struct str* input) {
                         token_start, token_length);
             created_digit = true;
         }
+        else if (state == STRING_LITERAL) {
+            if (byte != '\'') {
+                continue;
+            }
+            state = START;
+            uint64_t token_length = (uint64_t) (current - token_start);
+            token_push(&tokens, TOKEN_STRING_LITERAL,
+                        token_start, token_length);
+            continue;
+        }
 
         if (is_alpha(byte)) {
             if (state == START) {
@@ -107,6 +118,12 @@ struct tokens lex(struct str* input) {
                 }
                 continue;
             }
+        }
+
+        if (byte == '\'' && state == START) {
+            state = STRING_LITERAL;
+            token_start = current + 1;
+            continue;
         }
 
         if (byte == '=') {
@@ -183,6 +200,9 @@ struct tokens lex(struct str* input) {
         uint64_t token_length = (uint64_t) (end - token_start);
         token_push(&tokens, TOKEN_NUMBER,
                    token_start, token_length);
+    }
+    else if (state == STRING_LITERAL) {
+        fatal_error("string literal not closed");
     }
 
     return tokens;

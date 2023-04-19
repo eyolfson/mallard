@@ -68,7 +68,12 @@ struct vector compile_instructions(struct str* str) {
 
 void compile(struct str* str, const char* output) {
     struct tokens tokens = lex(str);
-    struct function_ast_node* func = parse(&tokens);
+    struct ast_node* node = parse(&tokens);
+
+    if (!is_function_ast_node(node)) {
+        fatal_error("expected function ast node");
+    }
+    struct function_ast_node* func = (struct function_ast_node*) node;
     ast_node_analyze(func);
     struct vector instructions = instructions_create(func->insts);
 

@@ -5,12 +5,31 @@
 #include <stdlib.h>
 
 enum ast_node_kind {
+    AST_NODE_EXECUTABLE,
     AST_NODE_FUNCTION,
     AST_NODE_INSTRUCTIONS,
     AST_NODE_ITYPE,
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
 };
+
+bool is_executable_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_EXECUTABLE;
+}
+
+bool is_function_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_FUNCTION;
+}
+
+struct executable_ast_node* create_empty_executable_ast_node(void) {
+    struct executable_ast_node* node
+        = malloc(sizeof(struct executable_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_EXECUTABLE;
+    return node;
+}
 
 struct function_ast_node* create_empty_function_ast_node(void) {
     struct function_ast_node* node
