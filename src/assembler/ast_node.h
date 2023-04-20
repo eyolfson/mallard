@@ -11,6 +11,7 @@ struct ast_node {
 
 struct executable_ast_node {
     uint64_t kind;
+    struct token* output_path;
 };
 
 struct function_ast_node {
@@ -85,7 +86,7 @@ struct stype_ast_node* create_stype_ast_node(struct token* mnemonic,
 struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
                                              struct token* rd,
                                              struct token* imm);
-void ast_node_analyze(void* ast_node);
+void ast_node_analyze(struct ast_node* ast_node);
 bool ast_node_machine_code_is_compressible(void* ast_node);
 uint16_t ast_node_machine_code_u16(void* ast_node);
 uint32_t ast_node_machine_code_u32(void* ast_node);

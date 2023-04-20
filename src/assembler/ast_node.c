@@ -23,7 +23,7 @@ bool is_function_ast_node(struct ast_node* node) {
 
 struct executable_ast_node* create_empty_executable_ast_node(void) {
     struct executable_ast_node* node
-        = malloc(sizeof(struct executable_ast_node));
+        = calloc(1, sizeof(struct executable_ast_node));
     if (node == NULL) {
         exit(1);
     }
@@ -260,18 +260,26 @@ static void analyze_utype(struct utype_ast_node* node) {
     node->imm = imm;
 }
 
+static void analyze_executable(struct executable_ast_node* exec) {
+}
+
 static void analyze_func(struct function_ast_node* node) {
     uint32_t address = immediate_u32(node->address_token);
     node->addresss = address;
 }
 
-void ast_node_analyze(void* ast_node) {
-    uint64_t kind = *((uint64_t *) ast_node);
+void ast_node_analyze(struct ast_node* ast_node) {
+    uint64_t kind = ast_node->kind;
     switch (kind) {
+    case AST_NODE_EXECUTABLE: {
+        struct executable_ast_node* exec = (struct executable_ast_node*) ast_node;
+        analyze_executable(exec);
+        break;
+    }
     case AST_NODE_FUNCTION: {
         struct function_ast_node* func = (struct function_ast_node*) ast_node;
         analyze_func(func);
-        ast_node_analyze(func->insts);
+        ast_node_analyze((struct ast_node*) func->insts);
         break;
     }
     case AST_NODE_INSTRUCTIONS: {

@@ -1,0 +1,6 @@
+executable 'mallard-kernel.elf' {
+    files: ['entry.mpf'],
+    code: 0x80000000,
+    entry: entry,
+    address(entry): 0x8000000,
+}

@@ -8,6 +8,7 @@
 #include "parser.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static struct vector instructions_init() {
@@ -62,23 +63,40 @@ static struct vector instructions_create(struct instructions_ast_node* insts) {
 struct vector compile_instructions(struct str* str) {
     struct tokens tokens = lex(str);
     struct instructions_ast_node* insts = parse_instructions(&tokens);
-    ast_node_analyze(insts);
     return instructions_create(insts);
 }
 
-void compile(struct str* str, const char* output) {
+static const char* str_to_c_str(struct str* str) {
+    char* buffer = calloc(1, str->size + 1);
+    if (buffer == NULL) {
+        fatal_error("out of memory");
+    }
+    memcpy(buffer, str->data, str->size);
+    return buffer;
+}
+
+void compile(struct str* str) {
     struct tokens tokens = lex(str);
     struct ast_node* node = parse(&tokens);
 
+    if (!is_executable_ast_node(node)) {
+        fatal_error("expected executable ast node");
+    }
+    struct executable_ast_node* exec = (struct executable_ast_node*) node;
+
+    /*
     if (!is_function_ast_node(node)) {
         fatal_error("expected function ast node");
     }
     struct function_ast_node* func = (struct function_ast_node*) node;
-    ast_node_analyze(func);
     struct vector instructions = instructions_create(func->insts);
+    */
 
     struct elf_file* elf_file = elf_create_empty();
+    /*
     elf_add_function(elf_file, func->name, func->addresss, &instructions);
     elf_set_entry(elf_file, func->addresss);
-    elf_write(elf_file, output);
+    */
+    const char* output_path = str_to_c_str(&exec->output_path->str);
+    elf_write(elf_file, output_path);
 }

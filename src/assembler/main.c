@@ -10,23 +10,14 @@
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        return 1;
+        fatal_error("required argument");
     }
 
     const char* input = NULL;
-    const char* output = NULL;
     const char* version = NULL;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--version") == 0) {
             version = argv[i];
-            continue;
-        }
-        else if (strcmp(argv[i], "-o") == 0) {
-            ++i;
-            if (i >= argc) {
-                fatal_error("required 'output' after '-o");
-            }
-            output = argv[i];
             continue;
         }
 
@@ -39,7 +30,7 @@ int main(int argc, char** argv) {
     }
 
     if (version != NULL) {
-        if (input != NULL || output != NULL) {
+        if (input != NULL) {
             fatal_error("'--version' should be the only argument");
             return 1;
         }
@@ -47,14 +38,12 @@ int main(int argc, char** argv) {
                 ANSI_BOLD MALLARD_VERSION ANSI_RESET "\n");
         return 0;
     }
-    else {
-        if (input == NULL || output == NULL) {
-            fatal_error("require both input and output files");
-        }
+    else if (input == NULL) {
+        fatal_error("required input file");
     }
 
     struct str str = file_open_read_mmap(input);
-    compile(&str, output);
+    compile(&str);
     file_close_mmap(&str);
 
     return 0;

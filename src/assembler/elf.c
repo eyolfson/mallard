@@ -448,14 +448,14 @@ static void elf_finalize(struct elf_file* elf_file) {
     elf_file->header->section_header_offset = current_offset;
 }
 
-void elf_write(struct elf_file* elf_file, const char* output) {
+void elf_write(struct elf_file* elf_file, const char* output_path) {
     if (!elf_file->set_entry) {
         fatal_error("elf file has no entry address");
     }
 
     elf_finalize(elf_file);
 
-    int fd = file_open_write(output);
+    int fd = file_open_write(output_path);
 
     ssize_t bytes_expected = sizeof(struct elf_header);
     ssize_t bytes_written = write(fd, elf_file->header, bytes_expected);

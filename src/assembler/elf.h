@@ -12,6 +12,6 @@ void elf_add_function(struct elf_file*,
                       struct token* name,
                       uint32_t address,
                       struct vector* instructions);
-void elf_write(struct elf_file* elf_file, const char* output);
+void elf_write(struct elf_file* elf_file, const char* output_path);
 
 #endif /* ifndef MALLARD_ELF_H */

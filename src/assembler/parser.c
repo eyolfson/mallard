@@ -137,9 +137,11 @@ static struct instructions_ast_node* instructions(struct parser* parser) {
 }
 
 static struct executable_ast_node* executable(struct parser* parser) {
-    struct executable_ast_node* node = create_empty_executable_ast_node();
+    struct executable_ast_node* exec = create_empty_executable_ast_node();
 
     struct token* output_path = expect(parser, TOKEN_STRING_LITERAL);
+    exec->output_path = output_path;
+
     expect(parser, TOKEN_LEFT_CURLY_BRACKET);
 
     while(accept(parser, TOKEN_IDENTIFIER)) {
@@ -174,7 +176,7 @@ static struct executable_ast_node* executable(struct parser* parser) {
 
     expect(parser, TOKEN_RIGHT_CURLY_BRACKET);
 
-    return node;
+    return exec;
 }
 
 static struct function_ast_node* function(struct parser* parser) {
@@ -262,6 +264,8 @@ struct ast_node* parse(struct tokens* tokens) {
                  (int) token->str.size, token->str.data);
         syntax_error(buffer);
     }
+
+    ast_node_analyze(node);
 
     return node;
 }
