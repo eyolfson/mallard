@@ -245,6 +245,8 @@ struct instructions_ast_node* parse_instructions(struct tokens* tokens) {
         syntax_error(buffer);
     }
 
+    ast_node_analyze((struct ast_node*) insts);
+
     return insts;
 }
 
