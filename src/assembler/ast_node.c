@@ -7,6 +7,7 @@
 enum ast_node_kind {
     AST_NODE_EXECUTABLE,
     AST_NODE_FUNCTION,
+    AST_NODE_FUNCTIONS,
     AST_NODE_INSTRUCTIONS,
     AST_NODE_ITYPE,
     AST_NODE_STYPE,
@@ -21,6 +22,10 @@ bool is_function_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_FUNCTION;
 }
 
+bool is_functions_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_FUNCTIONS;
+}
+
 struct executable_ast_node* create_empty_executable_ast_node(void) {
     struct executable_ast_node* node
         = calloc(1, sizeof(struct executable_ast_node));
@@ -28,7 +33,23 @@ struct executable_ast_node* create_empty_executable_ast_node(void) {
         exit(1);
     }
     node->kind = AST_NODE_EXECUTABLE;
+    node->output_path = NULL;
+    node->code_token = NULL;
+    node->files_length = 0;
+
+    node->code_address = 0;
+
     return node;
+}
+
+void executable_ast_node_add_file(struct executable_ast_node* exec,
+                                  struct token* token) {
+    uint64_t index = exec->files_length;
+    if (index >= FILES_MAX) {
+        fatal_error("maximum number of files");
+    }
+    exec->files[index] = token;
+    ++(exec->files_length);
 }
 
 struct function_ast_node* create_empty_function_ast_node(void) {
@@ -261,11 +282,13 @@ static void analyze_utype(struct utype_ast_node* node) {
 }
 
 static void analyze_executable(struct executable_ast_node* exec) {
+    uint32_t address = immediate_u32(exec->code_token);
+    exec->code_address = address;
 }
 
 static void analyze_func(struct function_ast_node* node) {
     uint32_t address = immediate_u32(node->address_token);
-    node->addresss = address;
+    node->address = address;
 }
 
 void ast_node_analyze(struct ast_node* ast_node) {

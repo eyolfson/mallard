@@ -160,12 +160,23 @@ static struct executable_ast_node* executable(struct parser* parser) {
         }
         else if (token_equals_c_str(field, "code")) {
             expect(parser, TOKEN_COLON);
-            expect(parser, TOKEN_NUMBER);
+            exec->code_token = expect(parser, TOKEN_NUMBER);
         }
         else if (token_equals_c_str(field, "files")) {
             expect(parser, TOKEN_COLON);
             expect(parser, TOKEN_LEFT_SQUARE_BRACKET);
-            expect(parser, TOKEN_STRING_LITERAL);
+
+            struct token* file = expect(parser, TOKEN_STRING_LITERAL);
+            executable_ast_node_add_file(exec, file);
+            while (accept(parser, TOKEN_COMMA)) {
+                expect(parser, TOKEN_COMMA);
+                if (!accept(parser, TOKEN_STRING_LITERAL)) {
+                    break;
+                }
+                file = expect(parser, TOKEN_STRING_LITERAL);
+                executable_ast_node_add_file(exec, file);
+            }
+
             expect(parser, TOKEN_RIGHT_SQUARE_BRACKET);
         }
 

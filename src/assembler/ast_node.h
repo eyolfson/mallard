@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+#define FILES_MAX 128
+
 struct ast_node {
     uint64_t kind;
 };
@@ -12,6 +14,11 @@ struct ast_node {
 struct executable_ast_node {
     uint64_t kind;
     struct token* output_path;
+    struct token* code_token;
+    struct token* files[FILES_MAX];
+    uint64_t files_length;
+
+    uint32_t code_address;
 };
 
 struct function_ast_node {
@@ -19,7 +26,13 @@ struct function_ast_node {
     struct token* name;
     struct token* address_token;
     struct instructions_ast_node* insts;
-    uint32_t addresss;
+    uint32_t address;
+};
+
+struct functions_ast_node {
+    uint64_t kind;
+    struct function_ast_node** ast_nodes;
+    uint64_t length;
 };
 
 struct instructions_ast_node {
@@ -70,6 +83,8 @@ struct utype_ast_node {
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
 struct executable_ast_node* create_empty_executable_ast_node(void);
+void executable_ast_node_add_file(struct executable_ast_node* exec,
+                                  struct token* token);
 struct function_ast_node* create_empty_function_ast_node(void);
 struct instructions_ast_node* create_empty_instructions_ast_node(void);
 void instructions_ast_node_push(struct instructions_ast_node* instructions,
