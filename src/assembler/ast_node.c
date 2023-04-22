@@ -14,6 +14,45 @@ enum ast_node_kind {
     AST_NODE_UTYPE,
 };
 
+uint32_t immediate_u32(struct token* imm) {
+    uint8_t* data = imm->str.data;
+    if (imm->str.size == 1) {
+        uint8_t byte = data[0];
+        if (byte >= '0' && byte <= '9') {
+            return byte - '0';
+        }
+        fatal_error("unknown number");
+    }
+
+    if (imm->str.size < 2) {
+        fatal_error("immediate too small for hex");
+    }
+    else if (imm->str.size > 10) {
+        fatal_error("immediate too large for hex");
+    }
+    if (data[0] != '0' || data[1] != 'x') {
+        fatal_error("immediate hex must start with 0x");
+    }
+    uint32_t val = 0;
+    for (uint8_t i = 2; i < imm->str.size; ++i) {
+        val = val << 4;
+        uint8_t byte = data[i];
+        if (byte >= '0' && byte <= '9') {
+            val = val | (byte - '0');
+        }
+        else if (byte >= 'a' && byte <= 'f') {
+            val = val | ((byte - 'a') + 10);
+        }
+        else if (byte >= 'A' && byte <= 'F') {
+            val = val | ((byte - 'A') + 10);
+        }
+        else {
+            fatal_error("not a valid hex");
+        }
+    }
+    return val;
+}
+
 bool is_executable_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_EXECUTABLE;
 }
@@ -34,6 +73,7 @@ struct executable_ast_node* create_empty_executable_ast_node(void) {
     }
     node->kind = AST_NODE_EXECUTABLE;
     node->output_path = NULL;
+    node->addresses = str_table_create();
     node->code_token = NULL;
     node->files_length = 0;
 
@@ -155,45 +195,6 @@ static uint8_t register_index(struct token* reg) {
         return data[1] - '0';
     }
     fatal_error("unknown register");
-}
-
-static uint32_t immediate_u32(struct token* imm) {
-    uint8_t* data = imm->str.data;
-    if (imm->str.size == 1) {
-        uint8_t byte = data[0];
-        if (byte >= '0' && byte <= '9') {
-            return byte - '0';
-        }
-        fatal_error("unknown number");
-    }
-
-    if (imm->str.size < 2) {
-        fatal_error("immediate too small for hex");
-    }
-    else if (imm->str.size > 10) {
-        fatal_error("immediate too large for hex");
-    }
-    if (data[0] != '0' || data[1] != 'x') {
-        fatal_error("immediate hex must start with 0x");
-    }
-    uint32_t val = 0;
-    for (uint8_t i = 2; i < imm->str.size; ++i) {
-        val = val << 4;
-        uint8_t byte = data[i];
-        if (byte >= '0' && byte <= '9') {
-            val = val | (byte - '0');
-        }
-        else if (byte >= 'a' && byte <= 'f') {
-            val = val | ((byte - 'a') + 10);
-        }
-        else if (byte >= 'A' && byte <= 'F') {
-            val = val | ((byte - 'A') + 10);
-        }
-        else {
-            fatal_error("not a valid hex");
-        }
-    }
-    return val;
 }
 
 static void analyze_itype(struct itype_ast_node* node) {

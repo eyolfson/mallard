@@ -19,6 +19,7 @@ assembler_lib = static_library(
   'file.c',
   'lexer.c',
   'parser.c',
+  'str_table.c',
   'token.c',
   'tokens.c',
 )

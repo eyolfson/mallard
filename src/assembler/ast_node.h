@@ -1,6 +1,7 @@
 #ifndef MALLARD_AST_NODE_H
 #define MALLARD_AST_NODE_H
 
+#include "str_table.h"
 #include "token.h"
 
 #include <stdbool.h>
@@ -14,7 +15,9 @@ struct ast_node {
 struct executable_ast_node {
     uint64_t kind;
     struct token* output_path;
+    struct str_table* addresses;
     struct token* code_token;
+    struct token* entry_token;
     struct token* files[FILES_MAX];
     uint64_t files_length;
 
@@ -79,6 +82,8 @@ struct utype_ast_node {
     uint8_t rd;
     uint32_t imm;
 };
+
+uint32_t immediate_u32(struct token* imm);
 
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
