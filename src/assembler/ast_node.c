@@ -100,7 +100,6 @@ struct function_ast_node* create_empty_function_ast_node(void) {
     }
     node->kind = AST_NODE_FUNCTION;
     node->name = NULL;
-    node->address_token = NULL;
     node->insts = NULL;
     return node;
 }
@@ -288,8 +287,6 @@ static void analyze_executable(struct executable_ast_node* exec) {
 }
 
 static void analyze_func(struct function_ast_node* node) {
-    uint32_t address = immediate_u32(node->address_token);
-    node->address = address;
 }
 
 void ast_node_analyze(struct ast_node* ast_node) {

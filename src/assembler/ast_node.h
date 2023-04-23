@@ -27,7 +27,6 @@ struct executable_ast_node {
 struct function_ast_node {
     uint64_t kind;
     struct token* name;
-    struct token* address_token;
     struct instructions_ast_node* insts;
     uint32_t address;
 };

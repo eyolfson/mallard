@@ -1,4 +1,4 @@
-func entry [addr=0x80000000] {
+func entry {
     addiw a0, x0, 0x4d
     lui a1, 0x10000
     sb a0, 0(a1)
