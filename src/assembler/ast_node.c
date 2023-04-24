@@ -14,45 +14,6 @@ enum ast_node_kind {
     AST_NODE_UTYPE,
 };
 
-uint32_t immediate_u32(struct token* imm) {
-    uint8_t* data = imm->str.data;
-    if (imm->str.size == 1) {
-        uint8_t byte = data[0];
-        if (byte >= '0' && byte <= '9') {
-            return byte - '0';
-        }
-        fatal_error("unknown number");
-    }
-
-    if (imm->str.size < 2) {
-        fatal_error("immediate too small for hex");
-    }
-    else if (imm->str.size > 10) {
-        fatal_error("immediate too large for hex");
-    }
-    if (data[0] != '0' || data[1] != 'x') {
-        fatal_error("immediate hex must start with 0x");
-    }
-    uint32_t val = 0;
-    for (uint8_t i = 2; i < imm->str.size; ++i) {
-        val = val << 4;
-        uint8_t byte = data[i];
-        if (byte >= '0' && byte <= '9') {
-            val = val | (byte - '0');
-        }
-        else if (byte >= 'a' && byte <= 'f') {
-            val = val | ((byte - 'a') + 10);
-        }
-        else if (byte >= 'A' && byte <= 'F') {
-            val = val | ((byte - 'A') + 10);
-        }
-        else {
-            fatal_error("not a valid hex");
-        }
-    }
-    return val;
-}
-
 bool is_executable_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_EXECUTABLE;
 }
@@ -73,13 +34,31 @@ struct executable_ast_node* create_empty_executable_ast_node(void) {
     }
     node->kind = AST_NODE_EXECUTABLE;
     node->output_path = NULL;
-    node->addresses = str_table_create();
+    node->addresses_length = 0;
     node->code_token = NULL;
     node->files_length = 0;
 
     node->code_address = 0;
 
     return node;
+}
+
+void executable_ast_node_add_address(struct executable_ast_node* exec,
+                                     struct token* function,
+                                     struct token* address) {
+    uint64_t index = exec->addresses_length;
+    if (index >= ADDRESSES_MAX) {
+        fatal_error("maximum number of addresses");
+    }
+    struct executable_address_tuple* tuple
+        = calloc(1, sizeof(struct executable_address_tuple));
+    if (tuple == NULL) {
+        fatal_error("out of memory");
+    }
+    tuple->function = function;
+    tuple->imm_token = address;
+    exec->addresses[index] = tuple;
+    ++(exec->addresses_length);
 }
 
 void executable_ast_node_add_file(struct executable_ast_node* exec,
@@ -196,6 +175,45 @@ static uint8_t register_index(struct token* reg) {
     fatal_error("unknown register");
 }
 
+static uint32_t immediate_u32(struct token* imm) {
+    uint8_t* data = imm->str.data;
+    if (imm->str.size == 1) {
+        uint8_t byte = data[0];
+        if (byte >= '0' && byte <= '9') {
+            return byte - '0';
+        }
+        fatal_error("unknown number");
+    }
+
+    if (imm->str.size < 2) {
+        fatal_error("immediate too small for hex");
+    }
+    else if (imm->str.size > 10) {
+        fatal_error("immediate too large for hex");
+    }
+    if (data[0] != '0' || data[1] != 'x') {
+        fatal_error("immediate hex must start with 0x");
+    }
+    uint32_t val = 0;
+    for (uint8_t i = 2; i < imm->str.size; ++i) {
+        val = val << 4;
+        uint8_t byte = data[i];
+        if (byte >= '0' && byte <= '9') {
+            val = val | (byte - '0');
+        }
+        else if (byte >= 'a' && byte <= 'f') {
+            val = val | ((byte - 'a') + 10);
+        }
+        else if (byte >= 'A' && byte <= 'F') {
+            val = val | ((byte - 'A') + 10);
+        }
+        else {
+            fatal_error("not a valid hex");
+        }
+    }
+    return val;
+}
+
 static void analyze_itype(struct itype_ast_node* node) {
     /* Opcode */
     uint8_t opcode = 0;
@@ -281,9 +299,23 @@ static void analyze_utype(struct utype_ast_node* node) {
     node->imm = imm;
 }
 
+static int address_tuple_cmp(const void* lhs, const void* rhs) {
+    const struct executable_address_tuple** left
+        = (const struct executable_address_tuple**) lhs;
+    const struct executable_address_tuple** right
+        = (const struct executable_address_tuple**) rhs;
+    return (*left)->imm - (*right)->imm;
+}
+
 static void analyze_executable(struct executable_ast_node* exec) {
-    uint32_t address = immediate_u32(exec->code_token);
-    exec->code_address = address;
+    exec->code_address = immediate_u32(exec->code_token);
+    for (uint64_t i = 0; i < exec->addresses_length; ++i) {
+        exec->addresses[i]->imm = immediate_u32(exec->addresses[i]->imm_token);
+    }
+
+    qsort(exec->addresses, exec->addresses_length,
+          sizeof(struct executable_address_tuple*),
+          address_tuple_cmp);
 }
 
 static void analyze_func(struct function_ast_node* node) {
@@ -293,7 +325,8 @@ void ast_node_analyze(struct ast_node* ast_node) {
     uint64_t kind = ast_node->kind;
     switch (kind) {
     case AST_NODE_EXECUTABLE: {
-        struct executable_ast_node* exec = (struct executable_ast_node*) ast_node;
+        struct executable_ast_node* exec
+            = (struct executable_ast_node*) ast_node;
         analyze_executable(exec);
         break;
     }

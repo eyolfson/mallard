@@ -6,16 +6,24 @@
 
 #include <stdbool.h>
 
+#define ADDRESSES_MAX 128
 #define FILES_MAX 128
 
 struct ast_node {
     uint64_t kind;
 };
 
+struct executable_address_tuple {
+    struct token* function;
+    struct token* imm_token;
+    uint64_t imm;
+};
+
 struct executable_ast_node {
     uint64_t kind;
     struct token* output_path;
-    struct str_table* addresses;
+    struct executable_address_tuple* addresses[ADDRESSES_MAX];
+    uint64_t addresses_length;
     struct token* code_token;
     struct token* entry_token;
     struct token* files[FILES_MAX];
@@ -82,11 +90,12 @@ struct utype_ast_node {
     uint32_t imm;
 };
 
-uint32_t immediate_u32(struct token* imm);
-
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
 struct executable_ast_node* create_empty_executable_ast_node(void);
+void executable_ast_node_add_address(struct executable_ast_node* exec,
+                                     struct token* function,
+                                     struct token* address);
 void executable_ast_node_add_file(struct executable_ast_node* exec,
                                   struct token* token);
 struct function_ast_node* create_empty_function_ast_node(void);

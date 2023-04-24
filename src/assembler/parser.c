@@ -149,12 +149,12 @@ static struct executable_ast_node* executable(struct parser* parser) {
         
         if (token_equals_c_str(field, "address")) {
             expect(parser, TOKEN_LEFT_PAREN);
-            struct token* key = expect(parser, TOKEN_IDENTIFIER);
+            struct token* function = expect(parser, TOKEN_IDENTIFIER);
             expect(parser, TOKEN_RIGHT_PAREN);
             expect(parser, TOKEN_COLON);
-            struct token* val_token = expect(parser, TOKEN_NUMBER);
-            uint32_t val = immediate_u32(val_token);
-            str_table_insert(exec->addresses, &key->str, val);
+            struct token* address = expect(parser, TOKEN_NUMBER);
+
+            executable_ast_node_add_address(exec, function, address);
         }
         else if (token_equals_c_str(field, "entry")) {
             expect(parser, TOKEN_COLON);
