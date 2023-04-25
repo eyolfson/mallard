@@ -83,6 +83,22 @@ void compile(struct str* str) {
         fatal_error("expected executable ast node");
     }
     struct executable_ast_node* exec = (struct executable_ast_node*) node;
+    struct elf_file* elf_file = elf_create_empty();
+
+    for (uint64_t i = 0; i < exec->files_length; ++i) {
+        const char* path = str_to_c_str(&exec->files[i]->str);
+        struct str str = file_open_read_mmap(path);
+        struct tokens tokens = lex(&str);
+        struct ast_node* node = parse(&tokens);
+        if (!is_function_ast_node(node)) {
+            fatal_error("expected function ast node");
+        }
+        struct function_ast_node* func = (struct function_ast_node*) node;
+        struct vector instructions = instructions_create(func->insts);
+        elf_add_function(elf_file, func->name, &instructions);
+        /* The memory mapping needs to exist for tokens */
+        // file_close_mmap(&str);
+    }
 
     /*
     if (!is_function_ast_node(node)) {
@@ -92,7 +108,6 @@ void compile(struct str* str) {
     struct vector instructions = instructions_create(func->insts);
     */
 
-    struct elf_file* elf_file = elf_create_empty();
     /*
     elf_add_function(elf_file, func->name, func->addresss, &instructions);
     elf_set_entry(elf_file, func->addresss);

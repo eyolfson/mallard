@@ -385,10 +385,10 @@ static void elf_program_header_init(struct elf_file* elf_file,
 
 void elf_add_function(struct elf_file* elf_file,
                       struct token* name,
-                      uint32_t address,
                       struct vector* instructions) {
     elf_file->instructions = instructions;
-    elf_program_header_init(elf_file, address, instructions);
+    /* TODO: Move this somewhere else */
+    // elf_program_header_init(elf_file, address, instructions);
 
     struct elf_symbol* symbol = symtab_next(&elf_file->symtab);
     symbol->name
@@ -396,7 +396,8 @@ void elf_add_function(struct elf_file* elf_file,
     symbol->info = ST_INFO(STB_GLOBAL, STT_FUNC);
     symbol->other = ST_VISIBILITY(STV_DEFAULT);
     symbol->shndx = ELF_TEXT_SECTION_INDEX;
-    symbol->value = address;
+    /* TODO, set address after it's computed */
+    // symbol->value = address;
     symbol->size = instructions->size;
 }
 
