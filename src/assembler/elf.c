@@ -3,6 +3,7 @@
 #include "fatal_error.h"
 #include "file.h"
 #include "parser.h"
+#include "str_table.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -136,7 +137,7 @@ struct elf_file {
 
     struct elf_header* header;
 
-    struct vector* instructions;
+    struct str_table* function_table;
 
     struct vector symtab;
     struct elf_symbol* text_symbol;
@@ -250,6 +251,8 @@ struct elf_file* elf_create_empty() {
         fatal_error("out of memory");
     }
     elf_file->header = elf_header;
+
+    elf_file->function_table = str_table_create();
 
     elf_header->magic[0] = 0x7F;
     elf_header->magic[1] = 'E';
@@ -386,7 +389,9 @@ static void elf_program_header_init(struct elf_file* elf_file,
 void elf_add_function(struct elf_file* elf_file,
                       struct token* name,
                       struct vector* instructions) {
-    elf_file->instructions = instructions;
+
+    str_table_insert(elf_file->function_table, &name->str, instructions);
+    //elf_file->instructions = instructions;
     /* TODO: Move this somewhere else */
     // elf_program_header_init(elf_file, address, instructions);
 
@@ -415,7 +420,8 @@ static void elf_finalize(struct elf_file* elf_file) {
 
     struct elf_section_header* text_header
         = elf_section_header_get(elf_file, ELF_TEXT_SECTION_INDEX);
-    text_header->size = elf_file->instructions->size;
+    /* TODO: Need to compute the total size of the code section */
+    //text_header->size = elf_file->instructions->size;
 
     struct elf_section_header* symtab_header
         = elf_section_header_get(elf_file, ELF_SYMTAB_SECTION_INDEX);
@@ -436,7 +442,8 @@ static void elf_finalize(struct elf_file* elf_file) {
     elf_file->program_header->offset = current_offset;
     text_header->offset = current_offset;
 
-    current_offset += elf_file->instructions->size;
+    /* TODO: Need to compute the total size of the code section */
+    //current_offset += elf_file->instructions->size;
     symtab_header->offset = current_offset;
 
     current_offset += elf_file->symtab.size;
@@ -470,8 +477,9 @@ void elf_write(struct elf_file* elf_file, const char* output_path) {
         fatal_error("write failed (program header)");
     }
 
-    bytes_expected = elf_file->instructions->size;
-    bytes_written = write(fd, elf_file->instructions->data, bytes_expected);
+    /* TODO: Need to compute the total size of the code section */
+    // bytes_expected = elf_file->instructions->size;
+    // bytes_written = write(fd, elf_file->instructions->data, bytes_expected);
     if (bytes_written != bytes_expected) {
         fatal_error("write failed (instructions)");
     }

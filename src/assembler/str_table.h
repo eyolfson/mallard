@@ -8,6 +8,6 @@ struct str_table;
 struct str_table* str_table_create();
 void str_table_insert(struct str_table* str_table,
                       struct str* key,
-                      uint64_t val);
+                      void* val);
 
 #endif /* ifndef MALLARD_STR_TABLE_H */

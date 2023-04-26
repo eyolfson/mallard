@@ -8,7 +8,7 @@
 
 struct entry {
     struct str* key;
-    uint64_t val;
+    void* val;
 };
 
 struct str_table {
@@ -46,7 +46,7 @@ static uint64_t hash(struct str* key) {
 
 void str_table_insert(struct str_table* str_table,
                       struct str* key,
-                      uint64_t val) {
+                      void* val) {
     uint64_t index = hash(key) % str_table->entries_capacity;
     struct entry* data = (struct entry*) str_table->vector.data;
     struct entry* entry = &data[index];

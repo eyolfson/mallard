@@ -94,8 +94,12 @@ void compile(struct str* str) {
             fatal_error("expected function ast node");
         }
         struct function_ast_node* func = (struct function_ast_node*) node;
-        struct vector instructions = instructions_create(func->insts);
-        elf_add_function(elf_file, func->name, &instructions);
+        struct vector* instructions = calloc(1, sizeof(struct vector));
+        if (instructions == NULL) {
+            fatal_error("out of memory");
+        }
+        *instructions = instructions_create(func->insts);
+        elf_add_function(elf_file, func->name, instructions);
         /* The memory mapping needs to exist for tokens */
         // file_close_mmap(&str);
     }
