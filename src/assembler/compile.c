@@ -84,6 +84,7 @@ void compile(struct str* str) {
     }
     struct executable_ast_node* exec = (struct executable_ast_node*) node;
     struct elf_file* elf_file = elf_create_empty();
+    elf_file_set_code_start(elf_file, exec->code_address);
 
     for (uint64_t i = 0; i < exec->files_length; ++i) {
         const char* path = str_to_c_str(&exec->files[i]->str);
@@ -103,6 +104,8 @@ void compile(struct str* str) {
         /* The memory mapping needs to exist for tokens */
         // file_close_mmap(&str);
     }
+
+    elf_file_set_addresses(elf_file, exec->addresses, exec->addresses_length);
 
     /*
     if (!is_function_ast_node(node)) {

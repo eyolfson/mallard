@@ -133,11 +133,14 @@ struct elf_symbol {
 
 struct elf_file {
     bool set_entry;
-    bool set_program_header;
+    bool set_code_start;
 
     struct elf_header* header;
 
     struct str_table* function_table;
+
+    struct executable_address_tuple** addresses;
+    uint64_t addresses_length;
 
     struct vector symtab;
     struct elf_symbol* text_symbol;
@@ -368,22 +371,28 @@ void elf_set_entry(struct elf_file* elf_file, uint32_t address) {
     elf_file->set_entry = true;
 }
 
-static void elf_program_header_init(struct elf_file* elf_file,
-                                    uint32_t address,
-                                    struct vector* instructions) {
-    if (elf_file->set_program_header) {
-        fatal_error("program header already set");
+void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address) {
+    if (elf_file->set_code_start) {
+        fatal_error("code program header already set");
     }
 
     elf_file->program_header->type = 1;
     elf_file->program_header->flags = 0x5;
     elf_file->program_header->virtual_address = address;
     elf_file->program_header->physical_address = address;
-    elf_file->program_header->file_size = instructions->size;
-    elf_file->program_header->memory_size = instructions->size;
+    /* TODO: Calculate the size at the end */
+    // elf_file->program_header->file_size = instructions->size;
+    // elf_file->program_header->memory_size = instructions->size;
     elf_file->program_header->alignment = 0;
 
-    elf_file->set_program_header = true;
+    elf_file->set_code_start = true;
+}
+
+void elf_file_set_addresses(struct elf_file* elf_file,
+                            struct executable_address_tuple** addresses,
+                            uint64_t addresses_length) {
+    elf_file->addresses = addresses;
+    elf_file->addresses_length = addresses_length;
 }
 
 void elf_add_function(struct elf_file* elf_file,
@@ -407,11 +416,11 @@ void elf_add_function(struct elf_file* elf_file,
 }
 
 static void elf_finalize(struct elf_file* elf_file) {
-    if (!elf_file->set_entry) {
-        fatal_error("entry address not set");
+    if (!elf_file->set_code_start) {
+        fatal_error("elf file code start not set");
     }
-    if (!elf_file->set_program_header) {
-        fatal_error("program header not set");
+    if (!elf_file->set_entry) {
+        fatal_error("elf file entry address not set");
     }
 
     elf_file->header->program_header_num_entries = 1;
@@ -457,10 +466,6 @@ static void elf_finalize(struct elf_file* elf_file) {
 }
 
 void elf_write(struct elf_file* elf_file, const char* output_path) {
-    if (!elf_file->set_entry) {
-        fatal_error("elf file has no entry address");
-    }
-
     elf_finalize(elf_file);
 
     int fd = file_open_write(output_path);
