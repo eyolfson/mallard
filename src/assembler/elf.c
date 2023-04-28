@@ -135,12 +135,17 @@ struct elf_file {
     bool set_entry;
     bool set_code_start;
 
-    struct elf_header* header;
+    struct token* entry;
+
+    uint64_t code_start;
+    uint64_t code_size;
 
     struct str_table* function_table;
 
     struct executable_address_tuple** addresses;
     uint64_t addresses_length;
+
+    struct elf_header* header;
 
     struct vector symtab;
     struct elf_symbol* text_symbol;
@@ -359,7 +364,10 @@ struct elf_file* elf_create_empty() {
     return elf_file;
 }
 
-void elf_set_entry(struct elf_file* elf_file, uint32_t address) {
+void elf_file_set_entry(struct elf_file* elf_file, struct token* name) {
+    elf_file->entry = name;
+
+    /* TODO: Add all of this in finalize
     elf_file->header->entry = address;
 
     elf_file->text_symbol->value = address;
@@ -367,6 +375,7 @@ void elf_set_entry(struct elf_file* elf_file, uint32_t address) {
     struct elf_section_header* text_header
         = elf_section_header_get(elf_file, ELF_TEXT_SECTION_INDEX);
     text_header->address = address;
+    */
 
     elf_file->set_entry = true;
 }
@@ -375,6 +384,8 @@ void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address) {
     if (elf_file->set_code_start) {
         fatal_error("code program header already set");
     }
+
+    elf_file->code_start = address;
 
     elf_file->program_header->type = 1;
     elf_file->program_header->flags = 0x5;

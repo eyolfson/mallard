@@ -106,6 +106,7 @@ void compile(struct str* str) {
     }
 
     elf_file_set_addresses(elf_file, exec->addresses, exec->addresses_length);
+    elf_file_set_entry(elf_file, exec->entry_token);
 
     /*
     if (!is_function_ast_node(node)) {

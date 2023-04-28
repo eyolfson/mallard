@@ -12,7 +12,7 @@ void elf_file_set_addresses(struct elf_file* elf_file,
                             struct executable_address_tuple** addresses,
                             uint64_t addresses_length);
 void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address);
-void elf_set_entry(struct elf_file* elf_file, uint32_t address);
+void elf_file_set_entry(struct elf_file* elf_file, struct token* name);
 void elf_add_function(struct elf_file*,
                       struct token* name,
                       struct vector* instructions);
