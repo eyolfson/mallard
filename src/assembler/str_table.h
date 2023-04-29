@@ -5,6 +5,11 @@
 
 struct str_table;
 
+struct str_table_entry {
+    struct str* key;
+    void* val;
+};
+
 struct str_table* str_table_create();
 void str_table_insert(struct str_table* str_table,
                       struct str* key,

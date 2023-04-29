@@ -6,11 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-struct entry {
-    struct str* key;
-    void* val;
-};
-
 struct str_table {
     struct vector vector;
     uint64_t entries_size;
@@ -24,7 +19,7 @@ struct str_table* str_table_create() {
     }
     str_table->entries_capacity = 1024;
     str_table->vector.capacity
-        = str_table->entries_capacity * sizeof(struct entry);
+        = str_table->entries_capacity * sizeof(struct str_table_entry);
     str_table->vector.data = calloc(1, str_table->vector.capacity);
     if (str_table->vector.data == NULL) {
         fatal_error("out of memory");
@@ -48,8 +43,9 @@ void str_table_insert(struct str_table* str_table,
                       struct str* key,
                       void* val) {
     uint64_t index = hash(key) % str_table->entries_capacity;
-    struct entry* data = (struct entry*) str_table->vector.data;
-    struct entry* entry = &data[index];
+    struct str_table_entry* data
+        = (struct str_table_entry*) str_table->vector.data;
+    struct str_table_entry* entry = &data[index];
     if (entry->key != NULL) {
         fatal_error("unhandled collision");
     }
@@ -62,4 +58,3 @@ void str_table_insert(struct str_table* str_table,
 uint64_t str_table_size(struct str_table* str_table) {
     return str_table->entries_size;
 }
-
