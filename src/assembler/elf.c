@@ -133,6 +133,7 @@ struct elf_symbol {
 
 struct function_table_entry {
     struct vector* instructions;
+    struct elf_symbol* symbol;
     uint64_t address;
 };
 
@@ -415,15 +416,6 @@ void elf_add_function(struct elf_file* elf_file,
                       struct token* name,
                       struct vector* instructions) {
 
-    struct function_table_entry* entry
-        = calloc(1, sizeof(struct function_table_entry));
-    entry->instructions = instructions;
-    entry->address = 0;
-    str_table_insert(elf_file->function_table, &name->str, instructions);
-    //elf_file->instructions = instructions;
-    /* TODO: Move this somewhere else */
-    // elf_program_header_init(elf_file, address, instructions);
-
     struct elf_symbol* symbol = symtab_next(&elf_file->symtab);
     symbol->name
         = strtab_add_from_str(&elf_file->strtab, &name->str);
@@ -433,6 +425,13 @@ void elf_add_function(struct elf_file* elf_file,
     /* TODO, set address after it's computed */
     // symbol->value = address;
     symbol->size = instructions->size;
+
+    struct function_table_entry* entry
+        = calloc(1, sizeof(struct function_table_entry));
+    entry->instructions = instructions;
+    entry->symbol = symbol;
+    entry->address = 0;
+    str_table_insert(elf_file->function_table, &name->str, entry);
 }
 
 static void elf_finalize(struct elf_file* elf_file) {
