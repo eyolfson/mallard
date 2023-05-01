@@ -131,6 +131,11 @@ struct elf_symbol {
     uint64_t size;
 };
 
+struct function_table_entry {
+    struct vector* instructions;
+    uint64_t address;
+};
+
 struct elf_file {
     bool set_entry;
     bool set_code_start;
@@ -410,6 +415,10 @@ void elf_add_function(struct elf_file* elf_file,
                       struct token* name,
                       struct vector* instructions) {
 
+    struct function_table_entry* entry
+        = calloc(1, sizeof(struct function_table_entry));
+    entry->instructions = instructions;
+    entry->address = 0;
     str_table_insert(elf_file->function_table, &name->str, instructions);
     //elf_file->instructions = instructions;
     /* TODO: Move this somewhere else */
