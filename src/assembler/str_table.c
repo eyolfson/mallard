@@ -58,3 +58,14 @@ void str_table_insert(struct str_table* str_table,
 uint64_t str_table_size(struct str_table* str_table) {
     return str_table->entries_size;
 }
+
+struct str_table_entry* str_table_iterator(struct str_table* str_table) {
+    struct str_table_entry* entry
+        = (struct str_table_entry*) str_table->vector.data;
+    return entry;
+}
+
+void str_table_iterator_next(struct str_table* str_table,
+                             struct str_table_entry** iterator) {
+
+}
