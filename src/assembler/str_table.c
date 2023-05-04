@@ -72,5 +72,17 @@ struct str_table_entry* str_table_iterator(struct str_table* str_table) {
 
 void str_table_iterator_next(struct str_table* str_table,
                              struct str_table_entry** iterator) {
-
+    struct str_table_entry* entry = *iterator;
+    while (true) {
+        ++entry;
+        if (((uint8_t*) entry)
+            >= (str_table->vector.data + str_table->vector.capacity)) {
+            break;
+        }
+        if (entry->key != NULL) {
+            *iterator = entry;
+            return;
+        }
+    }
+    *iterator = NULL;
 }

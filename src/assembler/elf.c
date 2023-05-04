@@ -442,6 +442,12 @@ static void elf_finalize(struct elf_file* elf_file) {
         fatal_error("elf file entry address not set");
     }
 
+    struct str_table_entry* entry
+        = str_table_iterator(elf_file->function_table);
+    while (entry != NULL) {
+        str_table_iterator_next(elf_file->function_table, &entry);
+    }
+
     elf_file->header->program_header_num_entries = 1;
     elf_file->header->section_header_num_entries = ELF_NUM_SECTIONS;
     elf_file->header->section_header_string_index = ELF_SHSTRTAB_SECTION_INDEX;
