@@ -62,7 +62,12 @@ uint64_t str_table_size(struct str_table* str_table) {
 struct str_table_entry* str_table_iterator(struct str_table* str_table) {
     struct str_table_entry* entry
         = (struct str_table_entry*) str_table->vector.data;
-    return entry;
+    for (uint64_t i = 0; i < str_table->entries_capacity; ++i) {
+        if (entry[i].key != NULL) {
+            return &entry[i];
+        }
+    }
+    return NULL;
 }
 
 void str_table_iterator_next(struct str_table* str_table,
