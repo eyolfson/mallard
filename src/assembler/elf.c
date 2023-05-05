@@ -442,11 +442,57 @@ static void elf_finalize(struct elf_file* elf_file) {
         fatal_error("elf file entry address not set");
     }
 
-    struct str_table_entry* entry
-        = str_table_iterator(elf_file->function_table);
-    while (entry != NULL) {
-        str_table_iterator_next(elf_file->function_table, &entry);
+    struct str_table_entry* function_entry = NULL;
+
+    for (uint64_t i = 0; i < elf_file->addresses_length; ++i) {
+        struct executable_address_tuple* tuple = elf_file->addresses[i];
+        struct str* function_name = &(tuple->function->str);
+        function_entry = str_table_get(elf_file->function_table, function_name);
+        if (function_entry == NULL) {
+            fatal_error("address set for unknown function");
+        }
+        struct function_table_entry* entry = function_entry->val;
+        uint64_t address = tuple->imm;
+        entry->address = address;
+        entry->symbol->value = address;
+
+        uint64_t code_end = address + entry->instructions->size;
+        if (code_end <= elf_file->code_start) {
+            fatal_error("end of code needs to come after start");
+        }
+
+        uint64_t needed_code_size = code_end - elf_file->code_start;
+        if (needed_code_size > elf_file->code_size) {
+            elf_file->code_size = needed_code_size;
+        }
     }
+
+    function_entry = str_table_iterator(elf_file->function_table);
+    while (function_entry != NULL) {
+        struct function_table_entry* entry = function_entry->val;
+        if (entry->address == 0) {
+            fatal_error("function address not set");
+        }
+        str_table_iterator_next(elf_file->function_table, &function_entry);
+    }
+
+    {
+        function_entry = str_table_get(elf_file->function_table,
+                                       &elf_file->entry->str);
+        if (function_entry == NULL) {
+            fatal_error("address set for unknown function");
+        }
+        struct function_table_entry* entry = function_entry->val;
+        if (entry->address == 0) {
+            fatal_error("function address not set");
+        }
+        elf_file->header->entry = entry->address;
+    }
+
+    /* elf_file->code_size is finalized */
+
+    elf_file->program_header->file_size = elf_file->code_size;
+    elf_file->program_header->memory_size = elf_file->code_size;
 
     elf_file->header->program_header_num_entries = 1;
     elf_file->header->section_header_num_entries = ELF_NUM_SECTIONS;
@@ -454,8 +500,10 @@ static void elf_finalize(struct elf_file* elf_file) {
 
     struct elf_section_header* text_header
         = elf_section_header_get(elf_file, ELF_TEXT_SECTION_INDEX);
-    /* TODO: Need to compute the total size of the code section */
-    //text_header->size = elf_file->instructions->size;
+    text_header->address = elf_file->code_start;
+    text_header->size = elf_file->code_size;
+
+    elf_file->text_symbol->value = elf_file->code_start;
 
     struct elf_section_header* symtab_header
         = elf_section_header_get(elf_file, ELF_SYMTAB_SECTION_INDEX);
@@ -476,8 +524,7 @@ static void elf_finalize(struct elf_file* elf_file) {
     elf_file->program_header->offset = current_offset;
     text_header->offset = current_offset;
 
-    /* TODO: Need to compute the total size of the code section */
-    //current_offset += elf_file->instructions->size;
+    current_offset += text_header->size;
     symtab_header->offset = current_offset;
 
     current_offset += elf_file->symtab.size;
@@ -507,11 +554,37 @@ void elf_write(struct elf_file* elf_file, const char* output_path) {
         fatal_error("write failed (program header)");
     }
 
-    /* TODO: Need to compute the total size of the code section */
-    // bytes_expected = elf_file->instructions->size;
-    // bytes_written = write(fd, elf_file->instructions->data, bytes_expected);
-    if (bytes_written != bytes_expected) {
-        fatal_error("write failed (instructions)");
+    /* Write all the code to the text section */
+    off_t off = lseek(fd, 0, SEEK_CUR);
+    if (off == -1) {
+        fatal_error("lseek");
+    }
+    off_t code_start = off;
+    struct str_table_entry* function_entry
+        = str_table_iterator(elf_file->function_table);
+    while (function_entry != NULL) {
+        struct function_table_entry* entry = function_entry->val;
+        if (entry->address == 0) {
+            fatal_error("function address not set");
+        }
+
+        uint64_t code_offset = entry->address - elf_file->code_start;
+        off = lseek(fd, code_start + code_offset, SEEK_SET);
+        if (off == -1) {
+            fatal_error("lseek");
+        }
+
+        bytes_expected = entry->instructions->size;
+        bytes_written = write(fd, entry->instructions->data, bytes_expected);
+        if (bytes_written != bytes_expected) {
+            fatal_error("write failed (instructions)");
+        }
+
+        str_table_iterator_next(elf_file->function_table, &function_entry);
+    }
+    off = lseek(fd, code_start + elf_file->code_size, SEEK_SET);
+    if (off == -1) {
+        fatal_error("lseek");
     }
 
     bytes_expected = elf_file->symtab.size;

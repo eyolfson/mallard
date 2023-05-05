@@ -14,7 +14,7 @@ In your terminal, use the following commands:
 You must build the compiler first. After building the compiler, use the
 following command:
 
-    build/mallard-asm src/kernel/entry.mpf -o mallard-kernel.elf
+    build/mallard-asm src/kernel/kernel.mpf
 
 ## Running the Kernel
 

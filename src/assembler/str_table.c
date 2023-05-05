@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct str_table {
     struct vector vector;
@@ -57,6 +58,25 @@ void str_table_insert(struct str_table* str_table,
 
 uint64_t str_table_size(struct str_table* str_table) {
     return str_table->entries_size;
+}
+
+struct str_table_entry* str_table_get(struct str_table* str_table,
+                                      struct str* key) {
+    uint64_t index = hash(key) % str_table->entries_capacity;
+    struct str_table_entry* data
+        = (struct str_table_entry*) str_table->vector.data;
+    struct str_table_entry* entry = &data[index];
+    if (entry->key == NULL) {
+        return NULL;
+    }
+    /* TODO: More unhandled collisions */
+    if (entry->key->size != key->size) {
+        return NULL;
+    }
+    if (memcmp(entry->key->data, key->data, key->size) == 0) {
+        return entry;
+    }
+    return NULL;
 }
 
 struct str_table_entry* str_table_iterator(struct str_table* str_table) {
