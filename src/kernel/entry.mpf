@@ -1,6 +1,13 @@
 func entry {
-    addiw a0, x0, 0x4d
+    lui a0, 0x5
+    addiw a0, a0, 0x555
+    lui a1, 0x100
+    sw a0, 0(a1)
+}
+
+func message {
     lui a1, 0x10000
+    addiw a0, x0, 0x4d
     sb a0, 0(a1)
     addiw a0, x0, 0x61
     sb a0, 0(a1)
@@ -16,9 +23,4 @@ func entry {
     sb a0, 0(a1)
     addiw a0, x0, 0x0a
     sb a0, 0(a1)
-
-    lui a0, 0x5
-    addiw a0, a0, 0x555
-    lui a1, 0x100
-    sw a0, 0(a1)
 }

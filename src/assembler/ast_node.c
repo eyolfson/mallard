@@ -5,14 +5,18 @@
 #include <stdlib.h>
 
 enum ast_node_kind {
+    AST_NODE_UNIT,
     AST_NODE_EXECUTABLE,
     AST_NODE_FUNCTION,
-    AST_NODE_FUNCTIONS,
     AST_NODE_INSTRUCTIONS,
     AST_NODE_ITYPE,
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
 };
+
+bool is_unit_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_UNIT;
+}
 
 bool is_executable_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_EXECUTABLE;
@@ -22,8 +26,29 @@ bool is_function_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_FUNCTION;
 }
 
-bool is_functions_ast_node(struct ast_node* node) {
-    return node->kind == AST_NODE_FUNCTIONS;
+struct unit_ast_node* create_empty_unit_ast_node(void) {
+    struct unit_ast_node* node
+        = malloc(sizeof(struct unit_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_UNIT;
+    node->ast_nodes = NULL;
+    node->length = 0;
+    return node;
+}
+
+void unit_ast_node_push(struct unit_ast_node* unit, struct ast_node* node) {
+    uint64_t index = unit->length;
+    ++(unit->length);
+    unit->ast_nodes = realloc(
+        unit->ast_nodes,
+        unit->length * sizeof(struct ast_node*)
+    );
+    if (unit->ast_nodes == NULL) {
+        exit(1);
+    }
+    unit->ast_nodes[index] = node;
 }
 
 struct executable_ast_node* create_empty_executable_ast_node(void) {
@@ -324,6 +349,14 @@ static void analyze_func(struct function_ast_node* node) {
 void ast_node_analyze(struct ast_node* ast_node) {
     uint64_t kind = ast_node->kind;
     switch (kind) {
+    case AST_NODE_UNIT: {
+        struct unit_ast_node* unit
+            = (struct unit_ast_node*) ast_node;
+        for (uint64_t i = 0; i < unit->length; ++i) {
+            ast_node_analyze(unit->ast_nodes[i]);
+        }
+        break;
+    }
     case AST_NODE_EXECUTABLE: {
         struct executable_ast_node* exec
             = (struct executable_ast_node*) ast_node;

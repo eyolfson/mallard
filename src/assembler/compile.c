@@ -79,9 +79,18 @@ void compile(struct str* str) {
     struct tokens tokens = lex(str);
     struct ast_node* node = parse(&tokens);
 
+    if (!is_unit_ast_node(node)) {
+        fatal_error("expected unit ast node");
+    }
+    struct unit_ast_node* unit = (struct unit_ast_node*) node;
+    if (unit->length != 1) {
+        fatal_error("expected single node in unit");
+    }
+    node = unit->ast_nodes[0];
     if (!is_executable_ast_node(node)) {
         fatal_error("expected executable ast node");
     }
+
     struct executable_ast_node* exec = (struct executable_ast_node*) node;
     struct elf_file* elf_file = elf_create_empty();
     elf_file_set_code_start(elf_file, exec->code_address);
@@ -91,35 +100,30 @@ void compile(struct str* str) {
         struct str str = file_open_read_mmap(path);
         struct tokens tokens = lex(&str);
         struct ast_node* node = parse(&tokens);
-        if (!is_function_ast_node(node)) {
-            fatal_error("expected function ast node");
+        if (!is_unit_ast_node(node)) {
+            fatal_error("expected unit ast node");
         }
-        struct function_ast_node* func = (struct function_ast_node*) node;
-        struct vector* instructions = calloc(1, sizeof(struct vector));
-        if (instructions == NULL) {
-            fatal_error("out of memory");
+        struct unit_ast_node* unit = (struct unit_ast_node*) node;
+        for (uint64_t j = 0; j < unit->length; ++j) {
+            node = unit->ast_nodes[j];
+            if (!is_function_ast_node(node)) {
+                fatal_error("expected function ast node");
+            }
+            struct function_ast_node* func = (struct function_ast_node*) node;
+            struct vector* instructions = calloc(1, sizeof(struct vector));
+            if (instructions == NULL) {
+                fatal_error("out of memory");
+            }
+            *instructions = instructions_create(func->insts);
+            elf_add_function(elf_file, func->name, instructions);
+            /* The memory mapping needs to exist for tokens */
+            // file_close_mmap(&str);
         }
-        *instructions = instructions_create(func->insts);
-        elf_add_function(elf_file, func->name, instructions);
-        /* The memory mapping needs to exist for tokens */
-        // file_close_mmap(&str);
     }
 
     elf_file_set_addresses(elf_file, exec->addresses, exec->addresses_length);
     elf_file_set_entry(elf_file, exec->entry_token);
 
-    /*
-    if (!is_function_ast_node(node)) {
-        fatal_error("expected function ast node");
-    }
-    struct function_ast_node* func = (struct function_ast_node*) node;
-    struct vector instructions = instructions_create(func->insts);
-    */
-
-    /*
-    elf_add_function(elf_file, func->name, func->addresss, &instructions);
-    elf_set_entry(elf_file, func->addresss);
-    */
     const char* output_path = str_to_c_str(&exec->output_path->str);
     elf_write(elf_file, output_path);
 }

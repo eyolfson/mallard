@@ -210,20 +210,27 @@ static struct function_ast_node* function(struct parser* parser) {
     return func;
 }
 
-static struct ast_node* unit(struct parser* parser) {
-    struct token* keyword = expect(parser, TOKEN_IDENTIFIER);
-    if (token_equals_c_str(keyword, "executable")) {
-        return (struct ast_node*) executable(parser);
+static struct unit_ast_node* unit(struct parser* parser) {
+    struct unit_ast_node* unit = create_empty_unit_ast_node();
+
+    while (accept(parser, TOKEN_IDENTIFIER)) {
+        struct token* keyword = expect(parser, TOKEN_IDENTIFIER);
+        if (token_equals_c_str(keyword, "executable")) {
+            struct executable_ast_node* e = executable(parser);
+            unit_ast_node_push(unit, (struct ast_node*) e);
+        }
+        else if (token_equals_c_str(keyword, "func")) {
+            struct function_ast_node* f = function(parser);
+            unit_ast_node_push(unit, (struct ast_node*) f);
+        }
+        else {
+            char buffer[4096];
+            snprintf(buffer, sizeof(buffer), "unknown keyword '%.*s'",
+                    (int) keyword->str.size, keyword->str.data);
+            syntax_error(buffer);
+        }
     }
-    else if (token_equals_c_str(keyword, "func")) {
-        return (struct ast_node*) function(parser);
-    }
-    else {
-        char buffer[4096];
-        snprintf(buffer, sizeof(buffer), "unknown keyword '%.*s'",
-                 (int) keyword->str.size, keyword->str.data);
-        syntax_error(buffer);
-    }
+    return unit;
 }
 
 struct instructions_ast_node* parse_instructions(struct tokens* tokens) {
@@ -254,7 +261,7 @@ struct ast_node* parse(struct tokens* tokens) {
         .index = 0,
     };
 
-    struct ast_node* node = unit(&parser);
+    struct unit_ast_node* node = unit(&parser);
 
     if (parser.index != tokens->length) {
         struct token* token = token_get(tokens, parser.index);
@@ -265,7 +272,7 @@ struct ast_node* parse(struct tokens* tokens) {
         syntax_error(buffer);
     }
 
-    ast_node_analyze(node);
+    ast_node_analyze((struct ast_node*) node);
 
-    return node;
+    return (struct ast_node*) node;
 }

@@ -32,17 +32,17 @@ struct executable_ast_node {
     uint32_t code_address;
 };
 
+struct unit_ast_node {
+    uint64_t kind;
+    struct ast_node** ast_nodes;
+    uint64_t length;
+};
+
 struct function_ast_node {
     uint64_t kind;
     struct token* name;
     struct instructions_ast_node* insts;
     uint32_t address;
-};
-
-struct functions_ast_node {
-    uint64_t kind;
-    struct function_ast_node** ast_nodes;
-    uint64_t length;
 };
 
 struct instructions_ast_node {
@@ -90,8 +90,11 @@ struct utype_ast_node {
     uint32_t imm;
 };
 
+bool is_unit_ast_node(struct ast_node* node);
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
+struct unit_ast_node* create_empty_unit_ast_node(void);
+void unit_ast_node_push(struct unit_ast_node* unit, struct ast_node* node);
 struct executable_ast_node* create_empty_executable_ast_node(void);
 void executable_ast_node_add_address(struct executable_ast_node* exec,
                                      struct token* function,
