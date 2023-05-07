@@ -372,17 +372,6 @@ struct elf_file* elf_create_empty() {
 
 void elf_file_set_entry(struct elf_file* elf_file, struct token* name) {
     elf_file->entry = name;
-
-    /* TODO: Add all of this in finalize
-    elf_file->header->entry = address;
-
-    elf_file->text_symbol->value = address;
-
-    struct elf_section_header* text_header
-        = elf_section_header_get(elf_file, ELF_TEXT_SECTION_INDEX);
-    text_header->address = address;
-    */
-
     elf_file->set_entry = true;
 }
 
@@ -397,9 +386,6 @@ void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address) {
     elf_file->program_header->flags = 0x5;
     elf_file->program_header->virtual_address = address;
     elf_file->program_header->physical_address = address;
-    /* TODO: Calculate the size at the end */
-    // elf_file->program_header->file_size = instructions->size;
-    // elf_file->program_header->memory_size = instructions->size;
     elf_file->program_header->alignment = 0;
 
     elf_file->set_code_start = true;
@@ -419,11 +405,9 @@ void elf_add_function(struct elf_file* elf_file,
     struct elf_symbol* symbol = symtab_next(&elf_file->symtab);
     symbol->name
         = strtab_add_from_str(&elf_file->strtab, &name->str);
-    symbol->info = ST_INFO(STB_GLOBAL, STT_FUNC);
+    symbol->info = ST_INFO(STB_LOCAL, STT_FUNC);
     symbol->other = ST_VISIBILITY(STV_DEFAULT);
     symbol->shndx = ELF_TEXT_SECTION_INDEX;
-    /* TODO, set address after it's computed */
-    // symbol->value = address;
     symbol->size = instructions->size;
 
     struct function_table_entry* entry
@@ -451,8 +435,9 @@ static void elf_finalize(struct elf_file* elf_file) {
         if (function_entry == NULL) {
             fatal_error("address set for unknown function");
         }
-        struct function_table_entry* entry = function_entry->val;
         uint64_t address = tuple->imm;
+
+        struct function_table_entry* entry = function_entry->val;
         entry->address = address;
         entry->symbol->value = address;
 
@@ -470,9 +455,16 @@ static void elf_finalize(struct elf_file* elf_file) {
     function_entry = str_table_iterator(elf_file->function_table);
     while (function_entry != NULL) {
         struct function_table_entry* entry = function_entry->val;
+
+        /* TODO: just put the function at the end */
         if (entry->address == 0) {
-            fatal_error("function address not set");
+            uint64_t address = elf_file->code_start + elf_file->code_size;
+            entry->address = address;
+            entry->symbol->value = address;
+
+            elf_file->code_size += entry->instructions->size;
         }
+
         str_table_iterator_next(elf_file->function_table, &function_entry);
     }
 
@@ -480,11 +472,11 @@ static void elf_finalize(struct elf_file* elf_file) {
         function_entry = str_table_get(elf_file->function_table,
                                        &elf_file->entry->str);
         if (function_entry == NULL) {
-            fatal_error("address set for unknown function");
+            fatal_error("entry function does not exist");
         }
         struct function_table_entry* entry = function_entry->val;
         if (entry->address == 0) {
-            fatal_error("function address not set");
+            fatal_error("entry function address not set");
         }
         elf_file->header->entry = entry->address;
     }
@@ -508,6 +500,8 @@ static void elf_finalize(struct elf_file* elf_file) {
     struct elf_section_header* symtab_header
         = elf_section_header_get(elf_file, ELF_SYMTAB_SECTION_INDEX);
     symtab_header->size = elf_file->symtab.size;
+    /* TODO: Better way to determine the first non-local symbol */
+    symtab_header->info = 2 + str_table_size(elf_file->function_table);
 
     struct elf_section_header* strtab_header
         = elf_section_header_get(elf_file, ELF_STRTAB_SECTION_INDEX);

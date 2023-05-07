@@ -42,7 +42,6 @@ struct function_ast_node {
     uint64_t kind;
     struct token* name;
     struct instructions_ast_node* insts;
-    uint32_t address;
 };
 
 struct instructions_ast_node {

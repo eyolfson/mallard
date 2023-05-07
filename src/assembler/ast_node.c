@@ -344,6 +344,9 @@ static void analyze_executable(struct executable_ast_node* exec) {
 }
 
 static void analyze_func(struct function_ast_node* node) {
+    if (node->name->str.size == 0) {
+        fatal_error("function needs a name");
+    }
 }
 
 void ast_node_analyze(struct ast_node* ast_node) {
