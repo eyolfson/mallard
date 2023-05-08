@@ -2,6 +2,7 @@
 
 #include "fatal_error.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 enum ast_node_kind {
@@ -181,8 +182,30 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
 }
 
 static uint8_t register_index(struct token* reg) {
+    if (token_equals_c_str(reg, "zero")) {
+        return 0;
+    }
+    else if (token_equals_c_str(reg, "ra")) {
+        return 1;
+    }
+    else if (token_equals_c_str(reg, "sp")) {
+        return 2;
+    }
+    else if (token_equals_c_str(reg, "gp")) {
+        return 3;
+    }
+    else if (token_equals_c_str(reg, "tp")) {
+        return 4;
+    }
+    else if (token_equals_c_str(reg, "fp")) {
+        return 8;
+    }
+
     if (reg->str.size != 2) {
-        fatal_error("unknown register");
+        char buffer[80];
+        snprintf(buffer, sizeof(buffer), "unknown register: '%.*s'",
+                (int) reg->str.size, reg->str.data);
+        fatal_error(buffer);
     }
     uint8_t* data = reg->str.data;
     if (data[0] == 'a') {
@@ -193,11 +216,14 @@ static uint8_t register_index(struct token* reg) {
             return 11;
         }
     }
-    else if(data[0] == 'x') {
+    else if (data[0] == 'x') {
         /* TODO: only x0 - x9 */
         return data[1] - '0';
     }
-    fatal_error("unknown register");
+    char buffer[80];
+    snprintf(buffer, sizeof(buffer), "unknown register: '%.*s'",
+             (int) reg->str.size, reg->str.data);
+    fatal_error(buffer);
 }
 
 static uint32_t immediate_u32(struct token* imm) {
@@ -245,6 +271,10 @@ static void analyze_itype(struct itype_ast_node* node) {
     uint8_t funct = 0;
     if (token_equals_c_str(node->mnemonic, "addiw")) {
         opcode = 0x1B;
+        funct = 0;
+    }
+    else if (token_equals_c_str(node->mnemonic, "jalr")) {
+        opcode = 0x67;
         funct = 0;
     }
     else {

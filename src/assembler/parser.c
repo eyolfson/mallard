@@ -60,7 +60,7 @@ static struct token* expect(struct parser* parser, enum token_kind token_kind) {
     return token;
 }
 
-static struct itype_ast_node* addiw_instruction(
+static struct itype_ast_node* itype_instruction(
     struct parser* parser,
     struct token* mnemonic
 ) {
@@ -101,7 +101,10 @@ static struct stype_ast_node* stype_instruction(
 static void* instruction(struct parser* parser) {
     struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
     if (token_equals_c_str(mnemonic, "addiw")) {
-        return addiw_instruction(parser, mnemonic);
+        return itype_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "jalr")) {
+        return itype_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "lui")) {
         return lui_instruction(parser, mnemonic);

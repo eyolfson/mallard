@@ -23,4 +23,5 @@ func message {
     sb a0, 0(a1)
     addiw a0, x0, 0x0a
     sb a0, 0(a1)
+    jalr x0, ra, 0
 }
