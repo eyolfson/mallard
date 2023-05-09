@@ -328,7 +328,10 @@ static void analyze_stype(struct stype_ast_node* node) {
 static void analyze_utype(struct utype_ast_node* node) {
     /* Opcode */
     uint8_t opcode = 0;
-    if (token_equals_c_str(node->mnemonic, "lui")) {
+    if (token_equals_c_str(node->mnemonic, "jal")) {
+        opcode = 0x6F;
+    }
+    else if (token_equals_c_str(node->mnemonic, "lui")) {
         opcode = 0x37;
     }
     else {
