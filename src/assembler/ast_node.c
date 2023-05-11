@@ -13,6 +13,7 @@ enum ast_node_kind {
     AST_NODE_ITYPE,
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
+    AST_NODE_UJTYPE,
 };
 
 bool is_unit_ast_node(struct ast_node* node) {
@@ -178,6 +179,34 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
     node->mnemonic = mnemonic;
     node->rd_token = rd;
     node->imm_token = imm;
+    return node;
+}
+
+struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
+                                               struct token* rd,
+                                               struct token* imm) {
+    struct ujtype_ast_node* node = malloc(sizeof(struct ujtype_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_UJTYPE;
+    node->mnemonic = mnemonic;
+    node->rd_token = rd;
+    node->offset_token = imm;
+    return node;
+}
+
+struct ujtype_ast_node* create_ujtype_func_ast_node(struct token* mnemonic,
+                                                    struct token* rd,
+                                                    struct token* func) {
+    struct ujtype_ast_node* node = malloc(sizeof(struct ujtype_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_UJTYPE;
+    node->mnemonic = mnemonic;
+    node->rd_token = rd;
+    node->offset_token = func;
     return node;
 }
 
@@ -357,6 +386,43 @@ static void analyze_utype(struct utype_ast_node* node) {
     node->imm = imm;
 }
 
+static void analyze_ujtype(struct ujtype_ast_node* node) {
+    /* Opcode */
+    uint8_t opcode = 0;
+    if (token_equals_c_str(node->mnemonic, "jal")) {
+        opcode = 0x6F;
+    }
+    else if (token_equals_c_str(node->mnemonic, "lui")) {
+        opcode = 0x37;
+    }
+    else {
+        fatal_error("unknown utype mnemonic");
+    }
+    if (opcode >= 0x80) {
+        fatal_error("utype instruction opcode is only 7 bits");
+    }
+    else if ((opcode & 0x3) != 0x3) {
+        fatal_error("utype instruction lower two bits must be 1");
+    }
+    else if ((opcode & 0x1C) == 0x1C) {
+        fatal_error("utype instruction bits 4, 3, 2 are 111");
+    }
+    node->opcode = opcode;
+
+    node->rd = register_index(node->rd_token);
+
+    if (node->offset_token->kind == TOKEN_IDENTIFIER) {
+        node->offset = 0;
+        return;
+    }
+
+    uint32_t offset = immediate_u32(node->offset_token);
+    if (offset >= 0x100000) {
+        fatal_error("utype instruction immediate must be 20 bits");
+    }
+    node->offset = offset;
+}
+
 static int address_tuple_cmp(const void* lhs, const void* rhs) {
     const struct executable_address_tuple** left
         = (const struct executable_address_tuple**) lhs;
@@ -422,6 +488,9 @@ void ast_node_analyze(struct ast_node* ast_node) {
     case AST_NODE_UTYPE:
         analyze_utype((struct utype_ast_node*) ast_node);
         break;
+    case AST_NODE_UJTYPE:
+        analyze_ujtype((struct ujtype_ast_node*) ast_node);
+        break;
     default:
         fatal_error("unknown ast node");
     }
@@ -483,6 +552,18 @@ static bool machine_code_utype_is_compressible(
     return true;
 }
 
+static bool machine_code_ujtype_is_compressible(
+    struct ujtype_ast_node* node
+) {
+    if (node->rd < 8) {
+        return false;
+    }
+    else if (node->rd > 15) {
+        return false;
+    }
+    return false;
+}
+
 bool ast_node_machine_code_is_compressible(void* ast_node) {
     uint64_t kind = *((uint64_t *) ast_node);
     switch (kind) {
@@ -495,6 +576,10 @@ bool ast_node_machine_code_is_compressible(void* ast_node) {
     case AST_NODE_UTYPE:
         return machine_code_utype_is_compressible(
             (struct utype_ast_node*) ast_node
+        );
+    case AST_NODE_UJTYPE:
+        return machine_code_ujtype_is_compressible(
+            (struct ujtype_ast_node*) ast_node
         );
     default:
         fatal_error("[is_compressible] not an instruction ast node");
@@ -577,6 +662,14 @@ static uint32_t machine_code_utype_u32(struct utype_ast_node* node) {
     return val;
 }
 
+static uint32_t machine_code_ujtype_u32(struct ujtype_ast_node* node) {
+    uint32_t val = 0;
+    val |= node->opcode;
+    val |= node->rd << 7;
+    val |= node->offset << 12;
+    return val;
+}
+
 uint32_t ast_node_machine_code_u32(void* ast_node) {
     uint64_t kind = *((uint64_t *) ast_node);
     switch (kind) {
@@ -586,6 +679,8 @@ uint32_t ast_node_machine_code_u32(void* ast_node) {
         return machine_code_stype_u32((struct stype_ast_node*) ast_node);
     case AST_NODE_UTYPE:
         return machine_code_utype_u32((struct utype_ast_node*) ast_node);
+    case AST_NODE_UJTYPE:
+        return machine_code_ujtype_u32((struct ujtype_ast_node*) ast_node);
     default:
         fatal_error("[machine_code_32] not an instruction ast node");
     }

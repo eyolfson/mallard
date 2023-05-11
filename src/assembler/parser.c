@@ -73,17 +73,6 @@ static struct itype_ast_node* itype_instruction(
     return create_itype_ast_node(mnemonic, rd, rs1, imm);
 }
 
-static struct utype_ast_node* utype_instruction(
-    struct parser* parser,
-    struct token* mnemonic
-) {
-    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
-    expect(parser, TOKEN_COMMA);
-    struct token* imm = expect(parser, TOKEN_NUMBER);
-
-    return create_utype_ast_node(mnemonic, rd, imm);
-}
-
 static struct stype_ast_node* stype_instruction(
     struct parser* parser,
     struct token* mnemonic
@@ -98,13 +87,40 @@ static struct stype_ast_node* stype_instruction(
     return create_stype_ast_node(mnemonic, rs1, rs2, imm);
 }
 
+static struct utype_ast_node* utype_instruction(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* imm = expect(parser, TOKEN_NUMBER);
+
+    return create_utype_ast_node(mnemonic, rd, imm);
+}
+
+static struct ujtype_ast_node* ujtype_instruction(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+
+    if (accept(parser, TOKEN_IDENTIFIER)) {
+        struct token* func = expect(parser, TOKEN_IDENTIFIER);
+        return create_ujtype_func_ast_node(mnemonic, rd, func);
+    }
+
+    struct token* offset = expect(parser, TOKEN_NUMBER);
+    return create_ujtype_ast_node(mnemonic, rd, offset);
+}
+
 static void* instruction(struct parser* parser) {
     struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
     if (token_equals_c_str(mnemonic, "addiw")) {
         return itype_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "jal")) {
-        return utype_instruction(parser, mnemonic);
+        return ujtype_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "jalr")) {
         return itype_instruction(parser, mnemonic);
