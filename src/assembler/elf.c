@@ -418,7 +418,7 @@ void elf_add_function(struct elf_file* elf_file,
     str_table_insert(elf_file->function_table, &name->str, entry);
 }
 
-static void elf_finalize(struct elf_file* elf_file) {
+void elf_file_finalize(struct elf_file* elf_file) {
     if (!elf_file->set_code_start) {
         fatal_error("elf file code start not set");
     }
@@ -532,8 +532,6 @@ static void elf_finalize(struct elf_file* elf_file) {
 }
 
 void elf_write(struct elf_file* elf_file, const char* output_path) {
-    elf_finalize(elf_file);
-
     int fd = file_open_write(output_path);
 
     ssize_t bytes_expected = sizeof(struct elf_header);

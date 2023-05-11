@@ -123,6 +123,7 @@ void compile(struct str* str) {
 
     elf_file_set_addresses(elf_file, exec->addresses, exec->addresses_length);
     elf_file_set_entry(elf_file, exec->entry_token);
+    elf_file_finalize(elf_file);
 
     const char* output_path = str_to_c_str(&exec->output_path->str);
     elf_write(elf_file, output_path);

@@ -95,6 +95,8 @@ struct ujtype_ast_node {
     struct token* rd_token;
     struct token* offset_token;
 
+    bool needs_function_table;
+
     uint8_t opcode;
     uint8_t rd;
     uint32_t offset;

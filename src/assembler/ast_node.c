@@ -193,6 +193,7 @@ struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
     node->mnemonic = mnemonic;
     node->rd_token = rd;
     node->offset_token = imm;
+    node->needs_function_table = node->offset_token->kind == TOKEN_IDENTIFIER;
     return node;
 }
 

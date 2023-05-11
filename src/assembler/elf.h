@@ -16,6 +16,7 @@ void elf_file_set_entry(struct elf_file* elf_file, struct token* name);
 void elf_add_function(struct elf_file*,
                       struct token* name,
                       struct vector* instructions);
+void elf_file_finalize(struct elf_file* elf_file);
 void elf_write(struct elf_file* elf_file, const char* output_path);
 
 #endif /* ifndef MALLARD_ELF_H */
