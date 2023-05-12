@@ -132,6 +132,7 @@ struct elf_symbol {
 };
 
 struct function_table_entry {
+    struct function_ast_node* function_ast_node;
     struct vector* instructions;
     struct elf_symbol* symbol;
     uint64_t address;
@@ -399,12 +400,13 @@ void elf_file_set_addresses(struct elf_file* elf_file,
 }
 
 void elf_add_function(struct elf_file* elf_file,
-                      struct token* name,
+                      struct function_ast_node* function_ast_node,
                       struct vector* instructions) {
+    struct str* function_name = &(function_ast_node->name->str);
 
     struct elf_symbol* symbol = symtab_next(&elf_file->symtab);
     symbol->name
-        = strtab_add_from_str(&elf_file->strtab, &name->str);
+        = strtab_add_from_str(&elf_file->strtab, function_name);
     symbol->info = ST_INFO(STB_LOCAL, STT_FUNC);
     symbol->other = ST_VISIBILITY(STV_DEFAULT);
     symbol->shndx = ELF_TEXT_SECTION_INDEX;
@@ -412,10 +414,11 @@ void elf_add_function(struct elf_file* elf_file,
 
     struct function_table_entry* entry
         = calloc(1, sizeof(struct function_table_entry));
+    entry->function_ast_node = function_ast_node;
     entry->instructions = instructions;
     entry->symbol = symbol;
     entry->address = 0;
-    str_table_insert(elf_file->function_table, &name->str, entry);
+    str_table_insert(elf_file->function_table, function_name, entry);
 }
 
 void elf_file_finalize(struct elf_file* elf_file) {
@@ -529,6 +532,8 @@ void elf_file_finalize(struct elf_file* elf_file) {
 
     current_offset += elf_file->shstrtab.size;
     elf_file->header->section_header_offset = current_offset;
+
+    /* Final check for jumps to a label */
 }
 
 void elf_write(struct elf_file* elf_file, const char* output_path) {

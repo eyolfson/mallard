@@ -115,7 +115,7 @@ void compile(struct str* str) {
                 fatal_error("out of memory");
             }
             *instructions = instructions_create(func->insts);
-            elf_add_function(elf_file, func->name, instructions);
+            elf_add_function(elf_file, func, instructions);
             /* The memory mapping needs to exist for tokens */
             // file_close_mmap(&str);
         }

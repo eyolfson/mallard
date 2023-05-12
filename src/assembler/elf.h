@@ -14,7 +14,7 @@ void elf_file_set_addresses(struct elf_file* elf_file,
 void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address);
 void elf_file_set_entry(struct elf_file* elf_file, struct token* name);
 void elf_add_function(struct elf_file*,
-                      struct token* name,
+                      struct function_ast_node* function_ast_node,
                       struct vector* instructions);
 void elf_file_finalize(struct elf_file* elf_file);
 void elf_write(struct elf_file* elf_file, const char* output_path);
