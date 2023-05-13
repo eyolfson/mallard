@@ -421,6 +421,23 @@ void elf_add_function(struct elf_file* elf_file,
     str_table_insert(elf_file->function_table, function_name, entry);
 }
 
+static bool instructions_need_function_table(struct instructions_ast_node* insts) {
+    for (uint64_t i = 0; i < insts->length; ++i) {
+        struct ast_node* ast_node = insts->ast_nodes[i];
+        if (is_ujtype_ast_node(ast_node)) {
+            struct ujtype_ast_node* ujtype = (struct ujtype_ast_node*) ast_node;
+            if (!ujtype->needs_function_table) {
+                continue;
+            }
+            if (ujtype->offset_token->kind != TOKEN_IDENTIFIER) {
+                fatal_error("expected offset to function nanme");
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 void elf_file_finalize(struct elf_file* elf_file) {
     if (!elf_file->set_code_start) {
         fatal_error("elf file code start not set");
@@ -471,6 +488,8 @@ void elf_file_finalize(struct elf_file* elf_file) {
         str_table_iterator_next(elf_file->function_table, &function_entry);
     }
 
+    /* elf_file->code_size is finalized */
+
     {
         function_entry = str_table_get(elf_file->function_table,
                                        &elf_file->entry->str);
@@ -483,8 +502,6 @@ void elf_file_finalize(struct elf_file* elf_file) {
         }
         elf_file->header->entry = entry->address;
     }
-
-    /* elf_file->code_size is finalized */
 
     elf_file->program_header->file_size = elf_file->code_size;
     elf_file->program_header->memory_size = elf_file->code_size;
@@ -534,6 +551,20 @@ void elf_file_finalize(struct elf_file* elf_file) {
     elf_file->header->section_header_offset = current_offset;
 
     /* Final check for jumps to a label */
+    function_entry = str_table_iterator(elf_file->function_table);
+    while (function_entry != NULL) {
+        struct function_table_entry* entry = function_entry->val;
+        if (entry->address == 0) {
+            fatal_error("function address not set");
+        }
+
+        struct function_ast_node* function_ast_node = entry->function_ast_node;
+        if (instructions_need_function_table(function_ast_node->insts)) {
+            fatal_error("instructions need function table");
+        }
+
+        str_table_iterator_next(elf_file->function_table, &function_entry);
+    }
 }
 
 void elf_write(struct elf_file* elf_file, const char* output_path) {

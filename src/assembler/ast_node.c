@@ -28,6 +28,10 @@ bool is_function_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_FUNCTION;
 }
 
+bool is_ujtype_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_UJTYPE;
+}
+
 struct unit_ast_node* create_empty_unit_ast_node(void) {
     struct unit_ast_node* node
         = malloc(sizeof(struct unit_ast_node));
@@ -184,7 +188,7 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
 
 struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
                                                struct token* rd,
-                                               struct token* imm) {
+                                               struct token* offset) {
     struct ujtype_ast_node* node = malloc(sizeof(struct ujtype_ast_node));
     if (node == NULL) {
         exit(1);
@@ -192,22 +196,8 @@ struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
     node->kind = AST_NODE_UJTYPE;
     node->mnemonic = mnemonic;
     node->rd_token = rd;
-    node->offset_token = imm;
+    node->offset_token = offset;
     node->needs_function_table = node->offset_token->kind == TOKEN_IDENTIFIER;
-    return node;
-}
-
-struct ujtype_ast_node* create_ujtype_func_ast_node(struct token* mnemonic,
-                                                    struct token* rd,
-                                                    struct token* func) {
-    struct ujtype_ast_node* node = malloc(sizeof(struct ujtype_ast_node));
-    if (node == NULL) {
-        exit(1);
-    }
-    node->kind = AST_NODE_UJTYPE;
-    node->mnemonic = mnemonic;
-    node->rd_token = rd;
-    node->offset_token = func;
     return node;
 }
 

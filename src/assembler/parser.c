@@ -105,12 +105,13 @@ static struct ujtype_ast_node* ujtype_instruction(
     struct token* rd = expect(parser, TOKEN_IDENTIFIER);
     expect(parser, TOKEN_COMMA);
 
+    struct token* offset = NULL;
     if (accept(parser, TOKEN_IDENTIFIER)) {
-        struct token* func = expect(parser, TOKEN_IDENTIFIER);
-        return create_ujtype_func_ast_node(mnemonic, rd, func);
+        offset = expect(parser, TOKEN_IDENTIFIER);
+        return create_ujtype_ast_node(mnemonic, rd, offset);
     }
 
-    struct token* offset = expect(parser, TOKEN_NUMBER);
+    offset = expect(parser, TOKEN_NUMBER);
     return create_ujtype_ast_node(mnemonic, rd, offset);
 }
 
