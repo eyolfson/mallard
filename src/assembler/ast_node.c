@@ -657,7 +657,11 @@ static uint32_t machine_code_ujtype_u32(struct ujtype_ast_node* node) {
     uint32_t val = 0;
     val |= node->opcode;
     val |= node->rd << 7;
-    val |= node->offset << 12;
+    int32_t offset = node->offset;
+    val |= (offset & 0x100000) << 11; /* imm[20]    */
+    val |= (offset & 0xFF000);        /* imm[19,12] */
+    val |= (offset & 0x7FE) << 20;    /* imm[10,1]  */
+    val |= (offset & 0x800) << 9;     /* imm[11]    */
     return val;
 }
 

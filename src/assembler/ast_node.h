@@ -99,7 +99,7 @@ struct ujtype_ast_node {
 
     uint8_t opcode;
     uint8_t rd;
-    uint32_t offset;
+    int32_t offset;
 };
 
 bool is_unit_ast_node(struct ast_node* node);

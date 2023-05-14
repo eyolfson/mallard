@@ -1,5 +1,6 @@
 #include "elf.h"
 
+#include "compile.h"
 #include "fatal_error.h"
 #include "file.h"
 #include "parser.h"
@@ -129,13 +130,6 @@ struct elf_symbol {
     uint16_t shndx;
     uint64_t value;
     uint64_t size;
-};
-
-struct function_table_entry {
-    struct function_ast_node* function_ast_node;
-    struct vector* instructions;
-    struct elf_symbol* symbol;
-    uint64_t address;
 };
 
 struct elf_file {
@@ -560,7 +554,7 @@ void elf_file_finalize(struct elf_file* elf_file) {
 
         struct function_ast_node* function_ast_node = entry->function_ast_node;
         if (instructions_need_function_table(function_ast_node->insts)) {
-            fatal_error("instructions need function table");
+            instructions_recreate(entry, elf_file->function_table);
         }
 
         str_table_iterator_next(elf_file->function_table, &function_entry);

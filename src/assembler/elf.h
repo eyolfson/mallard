@@ -7,6 +7,13 @@
 
 struct elf_file;
 
+struct function_table_entry {
+    struct function_ast_node* function_ast_node;
+    struct vector* instructions;
+    struct elf_symbol* symbol;
+    uint64_t address;
+};
+
 struct elf_file* elf_create_empty();
 void elf_file_set_addresses(struct elf_file* elf_file,
                             struct executable_address_tuple** addresses,
