@@ -13,10 +13,34 @@
 
 #define ELF_NULL_SECTION_INDEX     0
 #define ELF_TEXT_SECTION_INDEX     1
-#define ELF_SYMTAB_SECTION_INDEX   2
-#define ELF_STRTAB_SECTION_INDEX   3
-#define ELF_SHSTRTAB_SECTION_INDEX 4
-#define ELF_NUM_SECTIONS           5
+#define ELF_DATA_SECTION_INDEX     2
+#define ELF_SYMTAB_SECTION_INDEX   3
+#define ELF_STRTAB_SECTION_INDEX   4
+#define ELF_SHSTRTAB_SECTION_INDEX 5
+#define ELF_NUM_SECTIONS           6
+
+#define EV_NONE    0
+#define EV_CURRENT 1
+
+#define EM_RISCV 243
+
+#define ET_NONE 0
+#define ET_REL  1
+#define ET_EXEC 2
+#define ET_DYN  3
+#define ET_CORE 4
+
+#define PT_NULL    0
+#define PT_LOAD    1
+#define PT_DYNAMIC 2
+#define PT_INTERP  3
+#define PT_NOTE    4
+#define PT_SHLIB   5
+#define PT_PHDR    6
+
+#define PF_X 0x1
+#define PF_W 0x2
+#define PF_R 0x4
 
 #define SHT_PROGBITS 1
 #define SHT_SYMTAB   2
@@ -141,6 +165,8 @@ struct elf_file {
     uint64_t code_start;
     uint64_t code_size;
 
+    uint64_t data_start;
+
     struct str_table* function_table;
 
     struct executable_address_tuple** addresses;
@@ -150,11 +176,13 @@ struct elf_file {
 
     struct vector symtab;
     struct elf_symbol* text_symbol;
+    struct elf_symbol* data_symbol;
 
     struct vector strtab;
     struct vector shstrtab;
 
-    struct elf_program_header* program_header;
+    struct elf_program_header* code_program_header;
+    struct elf_program_header* data_program_header;
 
     struct vector section_headers;
 };
@@ -269,14 +297,14 @@ struct elf_file* elf_create_empty() {
     elf_header->magic[3] = 'F';
     elf_header->bitness = 2;
     elf_header->endianness = 1;
-    elf_header->version = 1;
+    elf_header->version = EV_CURRENT;
     elf_header->os_abi = 0;
     elf_header->os_abi_version = 0;
     for (int i = 0; i < 7; ++i) {
         elf_header->padding[i] = 0;
     }
-    elf_header->type = 2;
-    elf_header->machine = 0xF3;
+    elf_header->type = ET_EXEC;
+    elf_header->machine = EM_RISCV;
     elf_header->elf_version = 1;
     elf_header->entry = 0;
     elf_file->header->flags = 0;
@@ -295,7 +323,9 @@ struct elf_file* elf_create_empty() {
     struct vector* shstrtab = &elf_file->shstrtab;
     strtab_create_empty(shstrtab);
 
-    elf_file->program_header = elf_program_header_create_empty();
+    elf_file->code_program_header = elf_program_header_create_empty();
+
+    elf_file->data_program_header = elf_program_header_create_empty();
 
     elf_section_headers_init(&elf_file->section_headers);
 
@@ -324,6 +354,24 @@ struct elf_file* elf_create_empty() {
     text_header->addralign = 2;
     text_header->entsize = 0;
 
+    struct elf_symbol* data_symbol = symtab_next(symtab);
+    data_symbol->name = strtab_add_from_c_str(strtab, ".data");
+    data_symbol->info = ST_INFO(STB_LOCAL, STT_SECTION);
+    data_symbol->other = ST_VISIBILITY(STV_DEFAULT);
+    data_symbol->shndx = ELF_DATA_SECTION_INDEX;
+    data_symbol->size = 0;
+    elf_file->data_symbol = data_symbol;
+
+    struct elf_section_header* data_header
+        = elf_section_header_get(elf_file, ELF_DATA_SECTION_INDEX);
+    data_header->name = strtab_add_from_c_str(shstrtab, ".data");
+    data_header->type = SHT_PROGBITS;
+    data_header->flags = SHF_ALLOC | SHF_WRITE;
+    data_header->link = 0;
+    data_header->info = 0;
+    data_header->addralign = 8;
+    data_header->entsize = 0;
+
     struct elf_section_header* symtab_header
         = elf_section_header_get(elf_file, ELF_SYMTAB_SECTION_INDEX);
     symtab_header->name
@@ -332,9 +380,7 @@ struct elf_file* elf_create_empty() {
     symtab_header->flags = 0;
     symtab_header->address = 0;
     symtab_header->link = ELF_STRTAB_SECTION_INDEX;
-    /* TODO: One greater than the symbol table index of the last local symbol
-             (binding STB_LOCAL). */
-    symtab_header->info = 2; 
+    /* symtab_header->info set elsewhere */
     symtab_header->addralign = 8;
     symtab_header->entsize = sizeof(struct elf_symbol);
 
@@ -377,11 +423,11 @@ void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address) {
 
     elf_file->code_start = address;
 
-    elf_file->program_header->type = 1;
-    elf_file->program_header->flags = 0x5;
-    elf_file->program_header->virtual_address = address;
-    elf_file->program_header->physical_address = address;
-    elf_file->program_header->alignment = 0;
+    elf_file->code_program_header->type = PT_LOAD;
+    elf_file->code_program_header->flags = PF_R | PF_X;
+    elf_file->code_program_header->virtual_address = address;
+    elf_file->code_program_header->physical_address = address;
+    elf_file->code_program_header->alignment = 0x1000;
 
     elf_file->set_code_start = true;
 }
@@ -484,6 +530,20 @@ void elf_file_finalize(struct elf_file* elf_file) {
 
     /* elf_file->code_size is finalized */
 
+    uint64_t code_end = elf_file->code_start + elf_file->code_size;
+    uint64_t data_start = code_end;
+    if ((data_start % 0x1000) != 0) {
+        data_start &= ~0xFFF;
+        data_start += 0x1000;
+    }
+    elf_file->data_start = data_start;
+
+    elf_file->data_program_header->type = PT_LOAD;
+    elf_file->data_program_header->flags = PF_R | PF_W;
+    elf_file->data_program_header->virtual_address = elf_file->data_start;
+    elf_file->data_program_header->physical_address = elf_file->data_start;
+    elf_file->data_program_header->alignment = 0x1000;
+
     {
         function_entry = str_table_get(elf_file->function_table,
                                        &elf_file->entry->str);
@@ -497,10 +557,10 @@ void elf_file_finalize(struct elf_file* elf_file) {
         elf_file->header->entry = entry->address;
     }
 
-    elf_file->program_header->file_size = elf_file->code_size;
-    elf_file->program_header->memory_size = elf_file->code_size;
+    elf_file->code_program_header->file_size = elf_file->code_size;
+    elf_file->code_program_header->memory_size = elf_file->code_size;
 
-    elf_file->header->program_header_num_entries = 1;
+    elf_file->header->program_header_num_entries = 2;
     elf_file->header->section_header_num_entries = ELF_NUM_SECTIONS;
     elf_file->header->section_header_string_index = ELF_SHSTRTAB_SECTION_INDEX;
 
@@ -511,11 +571,17 @@ void elf_file_finalize(struct elf_file* elf_file) {
 
     elf_file->text_symbol->value = elf_file->code_start;
 
+    struct elf_section_header* data_header
+        = elf_section_header_get(elf_file, ELF_DATA_SECTION_INDEX);
+    data_header->address = elf_file->data_start;
+
+    elf_file->data_symbol->value = elf_file->data_start;
+
     struct elf_section_header* symtab_header
         = elf_section_header_get(elf_file, ELF_SYMTAB_SECTION_INDEX);
     symtab_header->size = elf_file->symtab.size;
     /* TODO: Better way to determine the first non-local symbol */
-    symtab_header->info = 2 + str_table_size(elf_file->function_table);
+    symtab_header->info = 3 + str_table_size(elf_file->function_table);
 
     struct elf_section_header* strtab_header
         = elf_section_header_get(elf_file, ELF_STRTAB_SECTION_INDEX);
@@ -525,14 +591,20 @@ void elf_file_finalize(struct elf_file* elf_file) {
         = elf_section_header_get(elf_file, ELF_SHSTRTAB_SECTION_INDEX);
     shstrtab_header->size = elf_file->shstrtab.size;
 
+    /* Compute all the offsets */
     uint64_t current_offset = sizeof(struct elf_header);
     elf_file->header->program_header_offset = current_offset;
 
     current_offset += sizeof(struct elf_program_header);
-    elf_file->program_header->offset = current_offset;
+    current_offset += sizeof(struct elf_program_header);
+    elf_file->code_program_header->offset = current_offset;
     text_header->offset = current_offset;
 
     current_offset += text_header->size;
+    elf_file->data_program_header->offset = current_offset;
+    data_header->offset = current_offset;
+
+    current_offset += 0; /* TODO: Room for data */
     symtab_header->offset = current_offset;
 
     current_offset += elf_file->symtab.size;
@@ -571,9 +643,15 @@ void elf_write(struct elf_file* elf_file, const char* output_path) {
     }
 
     bytes_expected = sizeof(struct elf_program_header);
-    bytes_written = write(fd, elf_file->program_header, bytes_expected);
+    bytes_written = write(fd, elf_file->code_program_header, bytes_expected);
     if (bytes_written != bytes_expected) {
-        fatal_error("write failed (program header)");
+        fatal_error("write failed (code program header)");
+    }
+
+    bytes_expected = sizeof(struct elf_program_header);
+    bytes_written = write(fd, elf_file->data_program_header, bytes_expected);
+    if (bytes_written != bytes_expected) {
+        fatal_error("write failed (data program header)");
     }
 
     /* Write all the code to the text section */

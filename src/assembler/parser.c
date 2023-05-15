@@ -73,6 +73,20 @@ static struct itype_ast_node* itype_instruction(
     return create_itype_ast_node(mnemonic, rd, rs1, imm);
 }
 
+static struct itype_ast_node* itype_instruction_paren(
+    struct parser* parser,
+    struct token* mnemonic
+) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* imm = expect(parser, TOKEN_NUMBER);
+    expect(parser, TOKEN_LEFT_PAREN);
+    struct token* rs1 = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_RIGHT_PAREN);
+
+    return create_itype_ast_node(mnemonic, rd, rs1, imm);
+}
+
 static struct stype_ast_node* stype_instruction(
     struct parser* parser,
     struct token* mnemonic
@@ -124,7 +138,7 @@ static void* instruction(struct parser* parser) {
         return ujtype_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "jalr")) {
-        return itype_instruction(parser, mnemonic);
+        return itype_instruction_paren(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "lui")) {
         return utype_instruction(parser, mnemonic);
