@@ -239,7 +239,8 @@ static uint8_t register_index(struct token* reg) {
 
     if (reg->str.size < 2 || reg->str.size > 3) {
         char buffer[80];
-        snprintf(buffer, sizeof(buffer), "unknown register (too large): '%.*s'",
+        snprintf(buffer, sizeof(buffer),
+                 "unknown register (size needs to be between 2 and 3): '%.*s'",
                 (int) reg->str.size, reg->str.data);
         fatal_error(buffer);
     }
