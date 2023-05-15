@@ -45,15 +45,25 @@ static void instructions_push_u32(struct vector* instructions, uint32_t val) {
 
 static struct vector instructions_create(struct instructions_ast_node* insts) {
     struct vector instructions = instructions_init();
+    uint64_t offset = 0;
     for (uint64_t i = 0; i < insts->length; ++i) {
-        void* ast_node = insts->ast_nodes[i];
+        struct ast_node* ast_node = insts->ast_nodes[i];
+
+        if (is_label_ast_node(ast_node)) {
+            struct label_ast_node* label = (struct label_ast_node*) ast_node;
+            label->offset = offset;
+            continue;
+        }
+
         if (ast_node_machine_code_is_compressible(ast_node)) {
             instructions_push_u16(&instructions,
                                   ast_node_machine_code_u16(ast_node));
+            offset += 2;
         }
         else {
             instructions_push_u32(&instructions,
                                   ast_node_machine_code_u32(ast_node));
+            offset += 4;
         }
     }
     return instructions;

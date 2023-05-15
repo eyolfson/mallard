@@ -14,6 +14,7 @@ enum ast_node_kind {
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
     AST_NODE_UJTYPE,
+    AST_NODE_LABEL,
 };
 
 bool is_unit_ast_node(struct ast_node* node) {
@@ -30,6 +31,10 @@ bool is_function_ast_node(struct ast_node* node) {
 
 bool is_ujtype_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_UJTYPE;
+}
+
+bool is_label_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_LABEL;
 }
 
 struct unit_ast_node* create_empty_unit_ast_node(void) {
@@ -201,6 +206,17 @@ struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
     return node;
 }
 
+struct label_ast_node* create_label_ast_node(struct token* name) {
+    struct label_ast_node* node = malloc(sizeof(struct label_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_LABEL;
+    node->name = name;
+    node->offset = 0;
+    return node;
+}
+#include <stdio.h>
 static uint8_t register_index(struct token* reg) {
     if (token_equals_c_str(reg, "zero")) {
         return 0;
@@ -221,25 +237,56 @@ static uint8_t register_index(struct token* reg) {
         return 8;
     }
 
-    if (reg->str.size != 2) {
+    if (reg->str.size < 2 || reg->str.size > 3) {
         char buffer[80];
-        snprintf(buffer, sizeof(buffer), "unknown register: '%.*s'",
+        snprintf(buffer, sizeof(buffer), "unknown register (too large): '%.*s'",
                 (int) reg->str.size, reg->str.data);
         fatal_error(buffer);
     }
     uint8_t* data = reg->str.data;
-    if (data[0] == 'a') {
-        switch (data[1]) {
-        case '0':
-            return 10;
-        case '1':
-            return 11;
+    uint8_t first = data[0];
+
+    uint8_t number = 0;
+    for (uint8_t i = 1; i < reg->str.size; ++i) {
+        uint8_t byte = data[i];
+        if (byte < '0' || byte > '9') {
+            fatal_error("register requires number after first character");
         }
+        number *= 10;
+        number += (byte - '0');
     }
-    else if (data[0] == 'x') {
-        /* TODO: only x0 - x9 */
-        return data[1] - '0';
+    
+    if (first == 'a') {
+        if (number > 7) {
+            fatal_error("a registers need to be between 0 and 7"); 
+        }
+        return 10 + number;
     }
+    else if (first == 's') {
+        if (number > 11) {
+            fatal_error("s registers need to be between 0 and 11"); 
+        }
+        if (number < 2) {
+            return 8 + number;
+        }
+        return 16 + number;
+    }
+    else if (first == 't') {
+        if (number > 6) {
+            fatal_error("t registers need to be between 0 and 6"); 
+        }
+        if (number < 3) {
+            return 5 + number;
+        }
+        return 25 + number;
+    }
+    else if (first == 'x') {
+        if (number > 31) {
+            fatal_error("x registers need to be between 0 and 31"); 
+        }
+        return number;
+    }
+
     char buffer[80];
     snprintf(buffer, sizeof(buffer), "unknown register: '%.*s'",
              (int) reg->str.size, reg->str.data);
@@ -481,6 +528,9 @@ void ast_node_analyze(struct ast_node* ast_node) {
         break;
     case AST_NODE_UJTYPE:
         analyze_ujtype((struct ujtype_ast_node*) ast_node);
+        break;
+    case AST_NODE_LABEL:
+        /* No need to analyze */
         break;
     default:
         fatal_error("unknown ast node");

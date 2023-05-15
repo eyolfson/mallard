@@ -102,10 +102,18 @@ struct ujtype_ast_node {
     int32_t offset;
 };
 
+struct label_ast_node {
+    uint64_t kind;
+    struct token* name;
+
+    uint64_t offset;
+};
+
 bool is_unit_ast_node(struct ast_node* node);
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
 bool is_ujtype_ast_node(struct ast_node* node);
+bool is_label_ast_node(struct ast_node* node);
 
 struct unit_ast_node* create_empty_unit_ast_node(void);
 void unit_ast_node_push(struct unit_ast_node* unit, struct ast_node* node);
@@ -134,6 +142,7 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
 struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
                                                struct token* rd,
                                                struct token* offset);
+struct label_ast_node* create_label_ast_node(struct token* name);
 void ast_node_analyze(struct ast_node* ast_node);
 bool ast_node_machine_code_is_compressible(void* ast_node);
 uint16_t ast_node_machine_code_u16(void* ast_node);

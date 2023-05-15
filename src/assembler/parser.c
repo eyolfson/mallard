@@ -152,6 +152,10 @@ static void* instruction(struct parser* parser) {
     else if (token_equals_c_str(mnemonic, "sw")) {
         return stype_instruction(parser, mnemonic);
     }
+    else if (token_equals_c_str(mnemonic, "label")) {
+        struct token* name = expect(parser, TOKEN_IDENTIFIER);
+        return create_label_ast_node(name);
+    }
     else {
         char buffer[4096];
         snprintf(buffer, sizeof(buffer), "unknown instruction mnemonic '%.*s'",
