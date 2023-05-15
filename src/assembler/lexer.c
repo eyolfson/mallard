@@ -83,7 +83,7 @@ struct tokens lex(struct str* input) {
             created_digit = true;
         }
         else if (state == STRING_LITERAL) {
-            if (byte != '\'') {
+            if (byte != '"') {
                 continue;
             }
             state = START;
@@ -120,7 +120,7 @@ struct tokens lex(struct str* input) {
             }
         }
 
-        if (byte == '\'' && state == START) {
+        if (byte == '"' && state == START) {
             state = STRING_LITERAL;
             token_start = current + 1;
             continue;
