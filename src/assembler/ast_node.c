@@ -15,6 +15,7 @@ enum ast_node_kind {
     AST_NODE_UTYPE,
     AST_NODE_UJTYPE,
     AST_NODE_LABEL,
+    AST_NODE_UNINITIALIZED_DATA,
 };
 
 bool is_unit_ast_node(struct ast_node* node) {
@@ -35,6 +36,10 @@ bool is_ujtype_ast_node(struct ast_node* node) {
 
 bool is_label_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_LABEL;
+}
+
+bool is_uninitialized_data_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_UNINITIALIZED_DATA;
 }
 
 struct unit_ast_node* create_empty_unit_ast_node(void) {
@@ -216,7 +221,25 @@ struct label_ast_node* create_label_ast_node(struct token* name) {
     node->offset = 0;
     return node;
 }
-#include <stdio.h>
+
+struct uninitialized_data_ast_node* create_uninitialized_data_ast_node(
+    struct token* name,
+    struct token* size_value_token,
+    struct token* size_suffix_token
+) {
+    struct uninitialized_data_ast_node* node
+        = malloc(sizeof(struct uninitialized_data_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_UNINITIALIZED_DATA;
+    node->name = name;
+    node->size_value_token = size_value_token;
+    node->size_suffix_token = size_suffix_token;
+    return node;
+
+}
+
 static uint8_t register_index(struct token* reg) {
     if (token_equals_c_str(reg, "zero")) {
         return 0;
@@ -377,6 +400,10 @@ static void analyze_stype(struct stype_ast_node* node) {
         opcode = 0x23;
         funct = 0x2;
     }
+    else if (token_equals_c_str(node->mnemonic, "sd")) {
+        opcode = 0x23;
+        funct = 0x3;
+    }
     else {
         fatal_error("unknown stype mnemonic");
     }
@@ -487,6 +514,25 @@ static void analyze_func(struct function_ast_node* node) {
     }
 }
 
+static void analyze_uninitialized_data(
+    struct uninitialized_data_ast_node* node
+) {
+    uint32_t size = immediate_u32(node->size_value_token);
+    if (size == 0) {
+        fatal_error("size must be greater than 0");
+    }
+    if (token_equals_c_str(node->size_suffix_token, "b")) {
+        if (size % 8 != 0) {
+            fatal_error("size bit must be in multiples of 8");
+        }
+        size /= 8;
+    }
+    else if (!token_equals_c_str(node->size_suffix_token, "B")) {
+        fatal_error("size suffix");
+    }
+    node->size = size;
+}
+
 void ast_node_analyze(struct ast_node* ast_node) {
     uint64_t kind = ast_node->kind;
     switch (kind) {
@@ -532,6 +578,11 @@ void ast_node_analyze(struct ast_node* ast_node) {
         break;
     case AST_NODE_LABEL:
         /* No need to analyze */
+        break;
+    case AST_NODE_UNINITIALIZED_DATA:
+        analyze_uninitialized_data(
+            (struct uninitialized_data_ast_node*) ast_node
+        );
         break;
     default:
         fatal_error("unknown ast node");

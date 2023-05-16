@@ -152,6 +152,9 @@ static void* instruction(struct parser* parser) {
     else if (token_equals_c_str(mnemonic, "sw")) {
         return stype_instruction(parser, mnemonic);
     }
+    else if (token_equals_c_str(mnemonic, "sd")) {
+        return stype_instruction(parser, mnemonic);
+    }
     else if (token_equals_c_str(mnemonic, "label")) {
         struct token* name = expect(parser, TOKEN_IDENTIFIER);
         return create_label_ast_node(name);
@@ -251,6 +254,15 @@ static struct function_ast_node* function(struct parser* parser) {
     return func;
 }
 
+static struct ast_node* data(struct parser* parser) {
+    struct token* name = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COLON);
+    struct token* size_value = expect(parser, TOKEN_NUMBER);
+    struct token* size_suffix = expect(parser, TOKEN_IDENTIFIER);
+    return (struct ast_node*)
+           create_uninitialized_data_ast_node(name, size_value, size_suffix);
+}
+
 static struct unit_ast_node* unit(struct parser* parser) {
     struct unit_ast_node* unit = create_empty_unit_ast_node();
 
@@ -263,6 +275,9 @@ static struct unit_ast_node* unit(struct parser* parser) {
         else if (token_equals_c_str(keyword, "func")) {
             struct function_ast_node* f = function(parser);
             unit_ast_node_push(unit, (struct ast_node*) f);
+        }
+        else if (token_equals_c_str(keyword, "data")) {
+            unit_ast_node_push(unit, data(parser));
         }
         else {
             char buffer[4096];

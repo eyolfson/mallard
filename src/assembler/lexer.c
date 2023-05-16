@@ -22,6 +22,9 @@ static bool is_alpha(uint8_t byte) {
     if (byte >= 'a' && byte <= 'z') {
         return true;
     }
+    else if (byte >= 'A' && byte <= 'Z') {
+        return true;
+    }
     return false;
 }
 
@@ -59,7 +62,6 @@ struct tokens lex(struct str* input) {
         uint8_t* current = input->data + i;
         uint8_t byte = *current;
 
-        bool created_digit = false;
         if (state == IDENTIFIER) {
             if (is_alpha(byte) || is_digit(byte) || byte == '_') {
                 continue;
@@ -80,7 +82,6 @@ struct tokens lex(struct str* input) {
             uint64_t token_length = (uint64_t) (current - token_start);
             token_push(&tokens, TOKEN_NUMBER,
                         token_start, token_length);
-            created_digit = true;
         }
         else if (state == STRING_LITERAL) {
             if (byte != '"') {
@@ -95,9 +96,6 @@ struct tokens lex(struct str* input) {
 
         if (is_alpha(byte)) {
             if (state == START) {
-                if (created_digit) {
-                    fatal_error("lexer failed");
-                }
                 state = IDENTIFIER;
                 token_start = current;
                 continue;

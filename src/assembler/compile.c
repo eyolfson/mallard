@@ -181,19 +181,26 @@ void compile(struct str* str) {
         struct unit_ast_node* unit = (struct unit_ast_node*) node;
         for (uint64_t j = 0; j < unit->length; ++j) {
             node = unit->ast_nodes[j];
-            if (!is_function_ast_node(node)) {
-                fatal_error("expected function ast node");
+            if (is_function_ast_node(node)) {
+                struct function_ast_node* func = (struct function_ast_node*) node;
+                struct vector* instructions = calloc(1, sizeof(struct vector));
+                if (instructions == NULL) {
+                    fatal_error("out of memory");
+                }
+                *instructions = instructions_create(func->insts);
+                elf_add_function(elf_file, func, instructions);
             }
-            struct function_ast_node* func = (struct function_ast_node*) node;
-            struct vector* instructions = calloc(1, sizeof(struct vector));
-            if (instructions == NULL) {
-                fatal_error("out of memory");
+            else if (is_uninitialized_data_ast_node(node)) {
+                struct uninitialized_data_ast_node* data
+                    = (struct uninitialized_data_ast_node*) node;
+                elf_add_uninitialized_data(elf_file, data);
             }
-            *instructions = instructions_create(func->insts);
-            elf_add_function(elf_file, func, instructions);
-            /* The memory mapping needs to exist for tokens */
-            // file_close_mmap(&str);
+            else {
+                fatal_error("compile unhandled ast node");
+            }
         }
+        /* The memory mapping needs to exist for tokens */
+        // file_close_mmap(&str);
     }
 
     elf_file_set_addresses(elf_file, exec->addresses, exec->addresses_length);

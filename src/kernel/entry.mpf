@@ -30,3 +30,5 @@ func qemu_exit_success {
     lui a1, 0x100
     sw a0, 0(a1)
 }
+
+data flattened_device_tree_address : 8B

@@ -20,9 +20,13 @@ void elf_file_set_addresses(struct elf_file* elf_file,
                             uint64_t addresses_length);
 void elf_file_set_code_start(struct elf_file* elf_file, uint64_t address);
 void elf_file_set_entry(struct elf_file* elf_file, struct token* name);
-void elf_add_function(struct elf_file*,
+void elf_add_function(struct elf_file* elf_file,
                       struct function_ast_node* function_ast_node,
                       struct vector* instructions);
+void elf_add_uninitialized_data(
+    struct elf_file* elf_file,
+    struct uninitialized_data_ast_node* uninitialized_data_ast_node
+);
 void elf_file_finalize(struct elf_file* elf_file);
 void elf_write(struct elf_file* elf_file, const char* output_path);
 
