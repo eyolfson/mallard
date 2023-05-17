@@ -588,6 +588,30 @@ void elf_file_finalize(struct elf_file* elf_file) {
     elf_file->data_start = data_start;
     elf_file->bss_start = data_start + elf_file->data_size;
 
+    /* Add all the objects to the symbol table */
+    struct str_table_entry* object_entry
+        = str_table_iterator(elf_file->object_table);
+    while (object_entry != NULL) {
+        struct ast_node* node = object_entry->val;
+
+        if (is_uninitialized_data_ast_node(node)) {
+            struct uninitialized_data_ast_node* uninitialized
+                = (struct uninitialized_data_ast_node*) node;
+
+            struct str* object_name = &(uninitialized->name->str);
+            struct elf_symbol* symbol = symtab_next(&elf_file->symtab);
+            symbol->name
+                = strtab_add_from_str(&elf_file->strtab, object_name);
+            symbol->info = ST_INFO(STB_LOCAL, STT_OBJECT);
+            symbol->other = ST_VISIBILITY(STV_DEFAULT);
+            symbol->shndx = ELF_BSS_SECTION_INDEX;
+            symbol->value = elf_file->bss_start + uninitialized->offset;
+            symbol->size = uninitialized->size;
+        }
+
+        str_table_iterator_next(elf_file->object_table, &object_entry);
+    }
+
     elf_file->object_program_header->type = PT_LOAD;
     elf_file->object_program_header->flags = PF_R | PF_W;
     elf_file->object_program_header->virtual_address = elf_file->data_start;
@@ -645,7 +669,8 @@ void elf_file_finalize(struct elf_file* elf_file) {
     symtab_header->size = elf_file->symtab.size;
     /* TODO: Better way to determine the first non-local symbol */
     /* Currently there's and entry for null, .text, .data, and .bss */
-    symtab_header->info = 4 + str_table_size(elf_file->function_table);
+    symtab_header->info = 4 + str_table_size(elf_file->function_table)
+                            + str_table_size(elf_file->object_table);
 
     struct elf_section_header* strtab_header
         = elf_section_header_get(elf_file, ELF_STRTAB_SECTION_INDEX);
