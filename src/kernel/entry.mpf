@@ -1,4 +1,7 @@
 func entry {
+    auipc t0, 0x1
+    addiw t0, x0, 0x000
+    sd a1,0(t0)
     jal ra, message
     jal ra, qemu_exit_success
 }

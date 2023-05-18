@@ -131,8 +131,14 @@ static struct ujtype_ast_node* ujtype_instruction(
 
 static void* instruction(struct parser* parser) {
     struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
-    if (token_equals_c_str(mnemonic, "addiw")) {
+    if (token_equals_c_str(mnemonic, "addi")) {
         return itype_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "addiw")) {
+        return itype_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "auipc")) {
+        return utype_instruction(parser, mnemonic);
     }
     else if (token_equals_c_str(mnemonic, "jal")) {
         return ujtype_instruction(parser, mnemonic);

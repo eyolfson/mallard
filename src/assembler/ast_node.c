@@ -360,7 +360,11 @@ static void analyze_itype(struct itype_ast_node* node) {
     /* Opcode */
     uint8_t opcode = 0;
     uint8_t funct = 0;
-    if (token_equals_c_str(node->mnemonic, "addiw")) {
+    if (token_equals_c_str(node->mnemonic, "addi")) {
+        opcode = 0x13;
+        funct = 0;
+    }
+    else if (token_equals_c_str(node->mnemonic, "addiw")) {
         opcode = 0x1B;
         funct = 0;
     }
@@ -423,7 +427,10 @@ static void analyze_stype(struct stype_ast_node* node) {
 static void analyze_utype(struct utype_ast_node* node) {
     /* Opcode */
     uint8_t opcode = 0;
-    if (token_equals_c_str(node->mnemonic, "jal")) {
+    if (token_equals_c_str(node->mnemonic, "auipc")) {
+        opcode = 0x17;
+    }
+    else if (token_equals_c_str(node->mnemonic, "jal")) {
         opcode = 0x6F;
     }
     else if (token_equals_c_str(node->mnemonic, "lui")) {
@@ -634,6 +641,9 @@ static bool machine_code_utype_is_compressible(
         if (node->rd == 0 || node->rd == 2) {
             return false;
         }
+    }
+    else {
+        return false;
     }
 
     if (node->rd < 8) {
