@@ -102,6 +102,14 @@ struct ujtype_ast_node {
     int32_t offset;
 };
 
+struct load_immediate_ast_node {
+    uint64_t kind;
+    struct token* rd_token;
+    struct token* imm_token;
+
+    bool needs_function_table;
+};
+
 struct label_ast_node {
     uint64_t kind;
     struct token* name;
@@ -123,6 +131,7 @@ bool is_unit_ast_node(struct ast_node* node);
 bool is_executable_ast_node(struct ast_node* node);
 bool is_function_ast_node(struct ast_node* node);
 bool is_ujtype_ast_node(struct ast_node* node);
+bool is_load_immediate_ast_node(struct ast_node* node);
 bool is_label_ast_node(struct ast_node* node);
 bool is_uninitialized_data_ast_node(struct ast_node* node);
 
@@ -153,6 +162,10 @@ struct utype_ast_node* create_utype_ast_node(struct token* mnemonic,
 struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
                                                struct token* rd,
                                                struct token* offset);
+struct load_immediate_ast_node* create_load_immediate_ast_node(
+    struct token* rd,
+    struct token* imm
+);
 struct label_ast_node* create_label_ast_node(struct token* name);
 struct uninitialized_data_ast_node* create_uninitialized_data_ast_node(
     struct token* name,

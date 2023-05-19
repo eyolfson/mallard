@@ -129,6 +129,18 @@ static struct ujtype_ast_node* ujtype_instruction(
     return create_ujtype_ast_node(mnemonic, rd, offset);
 }
 
+static struct load_immediate_ast_node* load_immediate(struct parser* parser) {
+    struct token* rd = expect(parser, TOKEN_IDENTIFIER);
+    expect(parser, TOKEN_COMMA);
+    struct token* imm = NULL;
+    if (accept(parser, TOKEN_IDENTIFIER)) {
+        imm = expect(parser, TOKEN_IDENTIFIER);
+        return create_load_immediate_ast_node(rd, imm);
+    }
+    imm = expect(parser, TOKEN_NUMBER);
+    return create_load_immediate_ast_node(rd, imm);
+}
+
 static void* instruction(struct parser* parser) {
     struct token* mnemonic = expect(parser, TOKEN_IDENTIFIER);
     if (token_equals_c_str(mnemonic, "addi")) {
@@ -160,6 +172,9 @@ static void* instruction(struct parser* parser) {
     }
     else if (token_equals_c_str(mnemonic, "sd")) {
         return stype_instruction(parser, mnemonic);
+    }
+    else if (token_equals_c_str(mnemonic, "li")) {
+        return load_immediate(parser);
     }
     else if (token_equals_c_str(mnemonic, "label")) {
         struct token* name = expect(parser, TOKEN_IDENTIFIER);

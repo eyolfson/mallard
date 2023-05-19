@@ -1,6 +1,5 @@
 func entry {
-    auipc t0, 0x1
-    addiw t0, x0, 0x000
+    li t0, flattened_device_tree_address
     sd a1,0(t0)
     jal ra, message
     jal ra, qemu_exit_success
@@ -25,6 +24,10 @@ func message {
     addiw a0, x0, 0x0a
     sb a0, 0(a1)
     jalr x0, 0(ra)
+}
+
+func uart_ns16550a_init {
+
 }
 
 func qemu_exit_success {

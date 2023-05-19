@@ -14,6 +14,7 @@ enum ast_node_kind {
     AST_NODE_STYPE,
     AST_NODE_UTYPE,
     AST_NODE_UJTYPE,
+    AST_NODE_LOAD_IMMEDIATE,
     AST_NODE_LABEL,
     AST_NODE_UNINITIALIZED_DATA,
 };
@@ -32,6 +33,10 @@ bool is_function_ast_node(struct ast_node* node) {
 
 bool is_ujtype_ast_node(struct ast_node* node) {
     return node->kind == AST_NODE_UJTYPE;
+}
+
+bool is_load_immediate_ast_node(struct ast_node* node) {
+    return node->kind == AST_NODE_LOAD_IMMEDIATE;
 }
 
 bool is_label_ast_node(struct ast_node* node) {
@@ -208,6 +213,21 @@ struct ujtype_ast_node* create_ujtype_ast_node(struct token* mnemonic,
     node->rd_token = rd;
     node->offset_token = offset;
     node->needs_function_table = node->offset_token->kind == TOKEN_IDENTIFIER;
+    return node;
+}
+
+struct load_immediate_ast_node* create_load_immediate_ast_node(
+    struct token* rd,
+    struct token* imm
+) {
+    struct load_immediate_ast_node* node = malloc(sizeof(struct load_immediate_ast_node));
+    if (node == NULL) {
+        exit(1);
+    }
+    node->kind = AST_NODE_LOAD_IMMEDIATE;
+    node->rd_token = rd;
+    node->imm_token = imm;
+    node->needs_function_table = node->imm_token->kind == TOKEN_IDENTIFIER;
     return node;
 }
 
@@ -583,6 +603,9 @@ void ast_node_analyze(struct ast_node* ast_node) {
     case AST_NODE_UJTYPE:
         analyze_ujtype((struct ujtype_ast_node*) ast_node);
         break;
+    case AST_NODE_LOAD_IMMEDIATE:
+        /* No need to analyze */
+        break;
     case AST_NODE_LABEL:
         /* No need to analyze */
         break;
@@ -592,7 +615,7 @@ void ast_node_analyze(struct ast_node* ast_node) {
         );
         break;
     default:
-        fatal_error("unknown ast node");
+        fatal_error("[ast_node_analyze] unknown ast node");
     }
 }
 
