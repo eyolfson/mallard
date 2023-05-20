@@ -54,6 +54,9 @@ static struct vector instructions_create(struct instructions_ast_node* insts) {
             label->offset = offset;
             continue;
         }
+        else if (is_load_immediate_ast_node(ast_node)) {
+            continue;
+        }
 
         if (ast_node_machine_code_is_compressible(ast_node)) {
             instructions_push_u16(&instructions,
@@ -114,6 +117,9 @@ void instructions_recreate(struct function_table_entry* recreate_entry,
             struct ujtype_ast_node* ujtype = (struct ujtype_ast_node*) ast_node;
             fixup = ujtype_fixup(recreate_entry, function_table,
                                  offset, ujtype);
+        }
+        else if (is_load_immediate_ast_node(ast_node)) {
+            continue;
         }
 
         if (ast_node_machine_code_is_compressible(ast_node)) {
