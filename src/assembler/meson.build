@@ -17,6 +17,7 @@ assembler_lib = static_library(
   'elf.c',
   'fatal_error.c',
   'file.c',
+  'instructions.c',
   'lexer.c',
   'parser.c',
   'str_table.c',
