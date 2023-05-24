@@ -50,3 +50,13 @@ bool is_lui_instruction(uint32_t data) {
     struct utype_instruction i = *((struct utype_instruction*) &data);
     return i.opcode == 0x37;
 }
+
+bool is_jal_instruction(uint32_t data) {
+    struct ujtype_instruction i = *((struct ujtype_instruction*) &data);
+    return i.opcode == 0x6F;
+}
+
+bool is_jalr_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x67 && i.funct3 == 0x0;
+}
