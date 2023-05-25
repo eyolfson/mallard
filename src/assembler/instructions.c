@@ -26,6 +26,17 @@ struct stype_instruction {
     int imm11_5 : 7;
 };
 
+struct sbtype_instruction {
+    unsigned int opcode : 7;
+    unsigned int imm11 : 1;
+    unsigned int imm4_1 : 4;
+    unsigned int funct3 : 3;
+    unsigned int rs1 : 5;
+    unsigned int rs2 : 5;
+    unsigned int imm10_5 : 6;
+    int imm12 : 1;
+};
+
 struct utype_instruction {
     unsigned int opcode : 7;
     unsigned int rd : 5;
@@ -59,4 +70,34 @@ bool is_jal_instruction(uint32_t data) {
 bool is_jalr_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x67 && i.funct3 == 0x0;
+}
+
+bool is_beq_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x0;
+}
+
+bool is_bne_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x1;
+}
+
+bool is_blt_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x4;
+}
+
+bool is_bge_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x5;
+}
+
+bool is_bltu_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x6;
+}
+
+bool is_bgeu_instruction(uint32_t data) {
+    struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
+    return i.opcode == 0x63 && i.funct3 == 0x7;
 }
