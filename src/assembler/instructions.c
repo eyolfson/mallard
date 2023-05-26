@@ -52,6 +52,8 @@ struct ujtype_instruction {
     int imm20 : 1;
 } __attribute__((packed));
 
+/* rv32i instructions */
+
 bool is_auipc_instruction(uint32_t data) {
     struct utype_instruction i = *((struct utype_instruction*) &data);
     return i.opcode == 0x17;
@@ -100,4 +102,41 @@ bool is_bltu_instruction(uint32_t data) {
 bool is_bgeu_instruction(uint32_t data) {
     struct sbtype_instruction i = *((struct sbtype_instruction*) &data);
     return i.opcode == 0x63 && i.funct3 == 0x7;
+}
+
+bool is_lb_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x0;
+}
+
+bool is_lh_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x1;
+}
+
+bool is_lw_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x2;
+}
+
+bool is_lbu_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x4;
+}
+
+bool is_lhu_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x5;
+}
+
+/* rv64i instructions */
+
+bool is_ld_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x3;
+}
+
+bool is_lwu_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x03 && i.funct3 == 0x6;
 }
