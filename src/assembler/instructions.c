@@ -129,6 +129,21 @@ bool is_lhu_instruction(uint32_t data) {
     return i.opcode == 0x03 && i.funct3 == 0x5;
 }
 
+bool is_sb_instruction(uint32_t data) {
+    struct stype_instruction i = *((struct stype_instruction*) &data);
+    return i.opcode == 0x23 && i.funct3 == 0x0;
+}
+
+bool is_sh_instruction(uint32_t data) {
+    struct stype_instruction i = *((struct stype_instruction*) &data);
+    return i.opcode == 0x23 && i.funct3 == 0x1;
+}
+
+bool is_sw_instruction(uint32_t data) {
+    struct stype_instruction i = *((struct stype_instruction*) &data);
+    return i.opcode == 0x23 && i.funct3 == 0x2;
+}
+
 /* rv64i instructions */
 
 bool is_ld_instruction(uint32_t data) {
@@ -139,4 +154,9 @@ bool is_ld_instruction(uint32_t data) {
 bool is_lwu_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x03 && i.funct3 == 0x6;
+}
+
+bool is_sd_instruction(uint32_t data) {
+    struct stype_instruction i = *((struct stype_instruction*) &data);
+    return i.opcode == 0x23 && i.funct3 == 0x3;
 }

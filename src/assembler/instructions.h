@@ -20,9 +20,13 @@ bool is_lh_instruction(uint32_t data);
 bool is_lw_instruction(uint32_t data);
 bool is_lbu_instruction(uint32_t data);
 bool is_lhu_instruction(uint32_t data);
+bool is_sb_instruction(uint32_t data);
+bool is_sh_instruction(uint32_t data);
+bool is_sw_instruction(uint32_t data);
 
 /* rv64i instructions */
 bool is_lwu_instruction(uint32_t data);
 bool is_ld_instruction(uint32_t data);
+bool is_sd_instruction(uint32_t data);
 
 #endif /* ifndef MALLARD_INSTRUCTIONS_H */
