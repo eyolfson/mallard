@@ -29,13 +29,17 @@ bool is_sltiu_instruction(uint32_t data);
 bool is_xori_instruction(uint32_t data);
 bool is_ori_instruction(uint32_t data);
 bool is_andi_instruction(uint32_t data);
-bool is_slli_instruction(uint32_t data);
-bool is_srli_instruction(uint32_t data);
-bool is_srai_instruction(uint32_t data);
+bool is_slli_rv32i_instruction(uint32_t data);
+bool is_srli_rv32i_instruction(uint32_t data);
+bool is_srai_rv32i_instruction(uint32_t data);
 
 /* rv64i instructions */
 bool is_lwu_instruction(uint32_t data);
 bool is_ld_instruction(uint32_t data);
 bool is_sd_instruction(uint32_t data);
+bool is_addiw_instruction(uint32_t data);
+bool is_slli_instruction(uint32_t data);
+bool is_srli_instruction(uint32_t data);
+bool is_srai_instruction(uint32_t data);
 
 #endif /* ifndef MALLARD_INSTRUCTIONS_H */

@@ -174,17 +174,17 @@ bool is_andi_instruction(uint32_t data) {
     return i.opcode == 0x13 && i.funct3 == 0x7;
 }
 
-bool is_slli_instruction(uint32_t data) {
+bool is_slli_rv32i_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x13 && i.funct3 == 0x1 && i.imm11_0 < 32;
 }
 
-bool is_srli_instruction(uint32_t data) {
+bool is_srli_rv32i_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 32;
 }
 
-bool is_srai_instruction(uint32_t data) {
+bool is_srai_rv32i_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 1056
                                                && i.imm11_0 >= 1024 ;
@@ -205,4 +205,25 @@ bool is_lwu_instruction(uint32_t data) {
 bool is_sd_instruction(uint32_t data) {
     struct stype_instruction i = *((struct stype_instruction*) &data);
     return i.opcode == 0x23 && i.funct3 == 0x3;
+}
+
+bool is_addiw_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x1B && i.funct3 == 0x0;
+}
+
+bool is_slli_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x13 && i.funct3 == 0x1 && i.imm11_0 < 64;
+}
+
+bool is_srli_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 64;
+}
+
+bool is_srai_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 1088
+                                               && i.imm11_0 >= 1024 ;
 }
