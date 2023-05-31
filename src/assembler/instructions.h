@@ -32,6 +32,16 @@ bool is_andi_instruction(uint32_t data);
 bool is_slli_rv32i_instruction(uint32_t data);
 bool is_srli_rv32i_instruction(uint32_t data);
 bool is_srai_rv32i_instruction(uint32_t data);
+bool is_add_instruction(uint32_t data);
+bool is_sub_instruction(uint32_t data);
+bool is_sll_instruction(uint32_t data);
+bool is_slt_instruction(uint32_t data);
+bool is_sltu_instruction(uint32_t data);
+bool is_xor_instruction(uint32_t data);
+bool is_srl_instruction(uint32_t data);
+bool is_sra_instruction(uint32_t data);
+bool is_or_instruction(uint32_t data);
+bool is_and_instruction(uint32_t data);
 
 /* rv64i instructions */
 bool is_lwu_instruction(uint32_t data);

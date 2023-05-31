@@ -187,7 +187,58 @@ bool is_srli_rv32i_instruction(uint32_t data) {
 bool is_srai_rv32i_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 1056
-                                               && i.imm11_0 >= 1024 ;
+                                               && i.imm11_0 >= 1024;
+}
+
+bool is_add_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x0 && i.funct7 == 0x00;
+}
+
+bool is_sub_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x0 && i.funct7 == 0x20;
+}
+
+bool is_sll_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x1 && i.funct7 == 0x00;
+}
+
+bool is_slt_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x2 && i.funct7 == 0x00;
+}
+
+bool is_sltu_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x3 && i.funct7 == 0x00;
+}
+
+bool is_xor_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x4 && i.funct7 == 0x00;
+}
+
+bool is_srl_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x5 && i.funct7 == 0x00;
+
+}
+
+bool is_sra_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x5 && i.funct7 == 0x20;
+}
+
+bool is_or_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x6 && i.funct7 == 0x00;
+}
+
+bool is_and_instruction(uint32_t data) {
+    struct rtype_instruction i = *((struct rtype_instruction*) &data);
+    return i.opcode == 0x33 && i.funct3 == 0x7 && i.funct7 == 0x00;
 }
 
 /* rv64i instructions */
@@ -225,5 +276,5 @@ bool is_srli_instruction(uint32_t data) {
 bool is_srai_instruction(uint32_t data) {
     struct itype_instruction i = *((struct itype_instruction*) &data);
     return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 1088
-                                               && i.imm11_0 >= 1024 ;
+                                               && i.imm11_0 >= 1024;
 }
