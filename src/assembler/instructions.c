@@ -278,3 +278,19 @@ bool is_srai_instruction(uint32_t data) {
     return i.opcode == 0x13 && i.funct3 == 0x5 && i.imm11_0 < 1088
                                                && i.imm11_0 >= 1024;
 }
+
+bool is_slliw_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x1B && i.funct3 == 0x1 && i.imm11_0 < 32;
+}
+
+bool is_srliw_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x1B && i.funct3 == 0x5 && i.imm11_0 < 32;
+}
+
+bool is_sraiw_instruction(uint32_t data) {
+    struct itype_instruction i = *((struct itype_instruction*) &data);
+    return i.opcode == 0x1B && i.funct3 == 0x5 && i.imm11_0 < 1056
+                                               && i.imm11_0 >= 1024;
+}

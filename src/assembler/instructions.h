@@ -51,5 +51,8 @@ bool is_addiw_instruction(uint32_t data);
 bool is_slli_instruction(uint32_t data);
 bool is_srli_instruction(uint32_t data);
 bool is_srai_instruction(uint32_t data);
+bool is_slliw_instruction(uint32_t data);
+bool is_srliw_instruction(uint32_t data);
+bool is_sraiw_instruction(uint32_t data);
 
 #endif /* ifndef MALLARD_INSTRUCTIONS_H */
